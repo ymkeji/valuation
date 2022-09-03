@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 env:
   IMAGE: sxiaohao/valuation
+  TAG: ${{ github.sha }}
 jobs:
   build:
     strategy:
@@ -47,7 +48,7 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.TAG }}
 
       - name: Executing remote ssh commands using password
         uses: appleboy/ssh-action@master
@@ -57,6 +58,7 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
-            docker rmi -f ${{ env.IMAGE }} && docker rm -f valuation
-            docker pull ${{ env.IMAGE }}:latest 
-            docker run -itd --name valuation -p 8000:8000 -p 9000:9000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:latest
+            docker stop valuation && docker rm valuation
+            docker image prune -a
+            docker pull ${{ env.IMAGE }}:${{ env.TAG }}
+            docker run -itd --name valuation -p 8000:8000 -p 9000:9000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
