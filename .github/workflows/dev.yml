@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         go: [1.16]
-    name: build
+    name: Unit Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,10 +22,17 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
 
-      - name: Build and Test
+      - name: Unit Test
         run: |
-          go build ./...
           go test ./...
+  deploy:
+    strategy:
+      matrix:
+        go: [1.16]
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -61,4 +68,4 @@ jobs:
             docker stop valuation && docker rm valuation
             docker image prune -a
             docker pull ${{ env.IMAGE }}:${{ env.TAG }}
-            docker run -itd --name valuation -p 8000:8000 -p 9000:9000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
+            docker run -d --name valuation -p 8000:8000 -p 9000:9000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
