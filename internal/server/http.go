@@ -1,6 +1,7 @@
 package server
 
 import (
+	"github.com/gorilla/handlers"
 	"net/http"
 
 	"valuation/api/valuation/v1"
@@ -24,6 +25,11 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger)
 			aop.Recovery(),
 			aop.Validator(),
 		),
+		kratosHttp.Filter(
+			handlers.CORS(
+				handlers.AllowedOrigins([]string{"*"}),
+				handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT"}),
+			)),
 	}
 	if c.Http.Network != "" {
 		opts = append(opts, kratosHttp.Network(c.Http.Network))
@@ -35,7 +41,12 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger)
 		opts = append(opts, kratosHttp.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := kratosHttp.NewServer(opts...)
-	route := srv.Route("/", aop.FilterRecovery)
+	route := srv.Route("/",
+		aop.FilterRecovery,
+		handlers.CORS(
+			handlers.AllowedOrigins([]string{"*"}),
+			handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT"}),
+		))
 	route.GET("/login", func(c kratosHttp.Context) error {
 		mySigningKey := []byte("AllYourBase")
 		o := &struct {
