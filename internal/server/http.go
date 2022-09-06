@@ -1,9 +1,8 @@
 package server
 
 import (
-	"encoding/json"
-	"github.com/golang-jwt/jwt/v4"
 	"net/http"
+
 	"valuation/api/valuation/v1"
 	"valuation/internal/conf"
 	"valuation/internal/service"
@@ -13,6 +12,7 @@ import (
 	"github.com/go-kratos/kratos/v2/encoding"
 	"github.com/go-kratos/kratos/v2/log"
 	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 // NewHTTPServer new a HTTP server.
@@ -35,7 +35,8 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger)
 		opts = append(opts, kratosHttp.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := kratosHttp.NewServer(opts...)
-	srv.HandleFunc("/login", func(writer http.ResponseWriter, request *http.Request) {
+	route := srv.Route("/", aop.FilterRecovery)
+	route.GET("/login", func(c kratosHttp.Context) error {
 		mySigningKey := []byte("AllYourBase")
 		o := &struct {
 			signingMethod jwt.SigningMethod
@@ -48,18 +49,19 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger)
 		}
 		token := jwt.NewWithClaims(o.signingMethod, o.claims)
 		tokenString, err := token.SignedString(mySigningKey)
-		b, err := json.Marshal(map[string]interface{}{
+		if err != nil {
+			return err
+		}
+		return c.JSON(200, map[string]interface{}{
 			"msg": "ok",
 			"data": map[string]interface{}{
 				"access_token": tokenString,
 			},
 			"code": 200,
 		})
-		_, err = writer.Write(b)
-		if err != nil {
-			return
-		}
+
 	})
+	route.POST("/good/upload", service.GoodUpload)
 	valuation.RegisterGoodHTTPServer(srv, good)
 	return srv
 }

@@ -3,8 +3,10 @@ package aop
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"runtime"
 
 	"valuation/pkg/errorx"
@@ -28,16 +30,38 @@ func Recovery() middleware.Middleware {
 					log.Context(ctx).Errorf("%v: %+v\n%s\n", rerr, req, stack(4))
 
 					switch t := rerr.(type) {
-					case errorx.Error:
-						err = &t
-					case error:
+					case *errorx.Error:
 						err = t
+					case error:
+						err = errorx.New(500, t.Error())
 					}
 				}
 			}()
 			return handler(ctx, req)
 		}
 	}
+}
+
+func FilterRecovery(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rerr := recover(); rerr != nil {
+				var err error
+				log.Context(r.Context()).Errorf("%v: \n%s\n", rerr, stack(4))
+
+				switch t := rerr.(type) {
+				case *errorx.Error:
+					err = t
+				case error:
+					err = errorx.New(500, t.Error())
+				}
+				b, _ := json.Marshal(err)
+				_, _ = w.Write(b)
+
+			}
+		}()
+		next.ServeHTTP(w, r)
+	})
 }
 
 // stack returns a nicely formatted stack frame, skipping skip frames.

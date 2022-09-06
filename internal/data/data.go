@@ -20,10 +20,18 @@ type Data struct {
 }
 
 // NewData .
-func NewData(c *conf.Data, logger log.Logger, db *gorm.DB, redis *redis.Client) (*Data, func(), error) {
+func NewData(c *conf.Data, logger log.Logger) (*Data, func(), error) {
+	db, err := storage.NewDB(c)
+	if err != nil {
+		return nil, nil, err
+	}
+	rdb, err := storage.NewRedis(c)
+	if err != nil {
+		return nil, nil, err
+	}
 	cleanup := func() {
-		redis.Close()
+		rdb.Close()
 		log.NewHelper(logger).Info("closing the data resources")
 	}
-	return &Data{db: db, redis: redis}, cleanup, nil
+	return &Data{db: db, redis: rdb}, cleanup, nil
 }

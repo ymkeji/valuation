@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"valuation/internal/biz"
+	"valuation/pkg/storage"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -66,4 +67,20 @@ func (g *goodRepo) ExistByName(ctx context.Context, s string) (bool, error) {
 func (g *goodRepo) ListAll(ctx context.Context) ([]*biz.Good, error) {
 	//TODO implement me
 	panic("implement me")
+}
+
+func InsertGoodsByExcel(data []map[string]interface{}) error {
+	res := storage.DB.Table("goods").Model(&biz.Good{}).Create(data)
+	if res.Error != nil {
+		return res.Error
+	}
+	return nil
+}
+
+func HasGoodsByName(nameList []string) (goods []*biz.Good, err error) {
+	res := storage.DB.Table("goods").Model(&biz.Good{}).Where("name IN ?", nameList).Find(&goods)
+	if res.Error != nil {
+		return
+	}
+	return
 }

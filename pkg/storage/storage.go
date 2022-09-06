@@ -12,21 +12,25 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	DB *gorm.DB
+)
+
 func NewDB(c *conf.Data) (*gorm.DB, error) {
-	dsn := c.Database.Source
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	var err error
+	DB, err = gorm.Open(mysql.Open(c.Database.Source), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
-	sqlDB, err := db.DB()
+	sqlDB, err := DB.DB()
 	if err != nil {
 		return nil, err
 	}
 	sqlDB.SetMaxIdleConns(50)
 	sqlDB.SetMaxOpenConns(150)
 	sqlDB.SetConnMaxLifetime(time.Second * 25)
-	return db, err
+	return DB, err
 }
 
 func NewRedis(c *conf.Data) (*redis.Client, error) {
