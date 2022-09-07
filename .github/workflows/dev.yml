@@ -69,4 +69,4 @@ jobs:
             docker stop valuation && docker rm valuation
             docker image prune -a
             docker pull ${{ env.IMAGE }}:${{ env.TAG }}
-            docker run -d --name valuation -p 3306:8000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
+            docker run -d --name valuation -p ${{ secrets.SERVER_PORT }}:8000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
