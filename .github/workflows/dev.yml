@@ -31,6 +31,7 @@ jobs:
         go: [1.16]
     name: Deploy
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - uses: actions/checkout@v3
 
@@ -62,10 +63,10 @@ jobs:
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
             docker stop valuation && docker rm valuation
             docker image prune -a
             docker pull ${{ env.IMAGE }}:${{ env.TAG }}
-            docker run -d --name valuation -p 8000:8000 -p 9000:9000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
+            docker run -d --name valuation -p 3306:8000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
