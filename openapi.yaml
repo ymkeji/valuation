@@ -6,6 +6,24 @@ info:
     title: Good API
     version: 0.0.1
 paths:
+    "":
+        get:
+            tags:
+                - Good
+            operationId: Good_GetGood
+            parameters:
+                - name: id
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.valuation.GetGoodsReply'
     /good:
         put:
             tags:
@@ -46,6 +64,17 @@ paths:
             tags:
                 - Good
             operationId: Good_ListGoods
+            parameters:
+                - name: pageNum
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
+                - name: pageSize
+                  in: query
+                  schema:
+                    type: integer
+                    format: uint64
             responses:
                 "200":
                     description: OK
@@ -70,26 +99,8 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/api.valuation.ListGoodsReply'
+                                $ref: '#/components/schemas/api.valuation.ListGoodsByWordsReply'
     /good/{id}:
-        get:
-            tags:
-                - Good
-            operationId: Good_GetGood
-            parameters:
-                - name: id
-                  in: path
-                  required: true
-                  schema:
-                    type: integer
-                    format: uint64
-            responses:
-                "200":
-                    description: OK
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/api.valuation.GetGoodsReply'
         delete:
             tags:
                 - Good
@@ -147,6 +158,13 @@ components:
                     format: float
                 alias:
                     type: string
+        api.valuation.ListGoodsByWordsReply:
+            type: object
+            properties:
+                goods:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/api.valuation.GoodInfo'
         api.valuation.ListGoodsReply:
             type: object
             properties:
@@ -154,6 +172,15 @@ components:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.valuation.GoodInfo'
+                pageNum:
+                    type: integer
+                    format: uint64
+                pageSize:
+                    type: integer
+                    format: uint64
+                total:
+                    type: integer
+                    format: uint64
         api.valuation.UpdateGoodsReply:
             type: object
             properties: {}

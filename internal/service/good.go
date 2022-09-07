@@ -55,9 +55,28 @@ func (s *GoodService) GetGood(ctx context.Context, req *pb.GetGoodsRequest) (*pb
 	return &pb.GetGoodsReply{}, nil
 }
 func (s *GoodService) ListGoods(ctx context.Context, req *pb.ListGoodsRequest) (*pb.ListGoodsReply, error) {
-	return &pb.ListGoodsReply{}, nil
+	pageSize, total, goods, err := s.uc.GetGoods(ctx, req.PageNum, req.PageSize, &biz.Good{})
+	errorx.Dangerous(err)
+	var goodsInfo []*pb.GoodInfo
+	for _, good := range goods {
+		goodsInfo = append(goodsInfo, &pb.GoodInfo{
+			Id:     good.Id,
+			Name:   good.Name,
+			Type:   good.Type,
+			Unit:   good.Unit,
+			Price:  good.Price,
+			Tariff: good.Tariff,
+			Alias:  good.Alias,
+		})
+	}
+	return &pb.ListGoodsReply{
+		Goods:    goodsInfo,
+		PageNum:  req.PageNum,
+		PageSize: pageSize,
+		Total:    total,
+	}, nil
 }
-func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByWordsRequest) (*pb.ListGoodsReply, error) {
+func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByWordsRequest) (*pb.ListGoodsByWordsReply, error) {
 	goods, err := s.uc.GetGoodsByWords(ctx, req.Words)
 	errorx.Dangerous(err)
 	var goodsInfo []*pb.GoodInfo
@@ -72,7 +91,123 @@ func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByW
 			Alias:  good.Alias,
 		})
 	}
-	return &pb.ListGoodsReply{Goods: goodsInfo}, nil
+	return &pb.ListGoodsByWordsReply{Goods: goodsInfo}, nil
+}
+
+var (
+	params = []map[string]string{
+		{
+			"id":     "0",
+			"key":    "name",
+			"header": "货物（劳务）名称",
+			"isNull": "false",
+		},
+		{
+			"id":     "0",
+			"key":    "type",
+			"header": "规格型号",
+			"isNull": "false",
+		},
+		{
+			"id":     "0",
+			"key":    "unit",
+			"header": "单位",
+			"isNull": "false",
+		},
+		{
+			"id":     "0",
+			"key":    "price",
+			"header": "金额",
+			"isNull": "false",
+		},
+		{
+			"id":     "0",
+			"key":    "tariff",
+			"header": "税率",
+			"isNull": "false",
+		},
+	}
+	headRow = 0
+)
+
+func GoodUpload(ctx http.Context) error {
+	req := ctx.Request()
+	f, fHeader, err := req.FormFile("file")
+	errorx.Dangerous(err)
+	if fHeader.Size > 1024*1024*2 {
+		errorx.Bomb(500, "file size is too larger")
+	} else if !strings.HasSuffix(fHeader.Filename, ".xlsx") {
+		errorx.Bomb(500, "file format is error")
+	}
+	defer f.Close()
+
+	//excel落盘
+	filename := excel.CreateFileName()
+	fExcel, err := file.Create(path.Join(".", filename))
+	errorx.Dangerous(err)
+	defer func() {
+		_ = fExcel.Close()
+		_ = file.Remove(path.Join(".", filename))
+	}()
+	_, err = io.Copy(fExcel, f)
+	errorx.Dangerous(err)
+
+	//获取excel表
+	myExcel, err := excel.ReadMyExcel(path.Join(".", filename))
+	errorx.Dangerous(err)
+
+	//检查表头
+	for _, conf := range params {
+		search, err := myExcel.Search(conf["header"])
+		errorx.Dangerous(err)
+		if search == nil {
+			errorx.Bomb(500, "tableHeader %s not found", conf["header"])
+		}
+		x, y, err := excelize.CellNameToCoordinates(search[0])
+		errorx.Dangerous(err)
+		if headRow != 0 && y != headRow {
+			errorx.Bomb(500, "tableHeader format error")
+		}
+		headRow = y
+		conf["id"] = strconv.Itoa(x)
+	}
+
+	//获取表数据
+	rows, err := myExcel.Rows(headRow, params)
+	errorx.Dangerous(err)
+
+	//获取alias
+	nameList := make([]string, 0, len(rows))
+	for _, row := range rows {
+		nameList = append(nameList, row["name"].(string))
+		row["alias"] = convertx.Chinese2Spell(row["name"].(string))
+	}
+
+	//检查是否有重复name
+	goods, err := data.HasGoodsByName(nameList)
+	errorx.Dangerous(err)
+	if len(goods) == len(rows) {
+		errorx.Bomb(201, "all goods is exist")
+	}
+
+	//去除重复name
+	for _, good := range goods {
+		for i, row := range rows {
+			if row["name"] == good.Name {
+				rows[i] = rows[len(rows)-1]
+				rows = rows[:len(rows)-1]
+			}
+		}
+	}
+
+	//插入数据库
+	errorx.Dangerous(data.InsertGoodsByExcel(rows))
+
+	return ctx.JSON(200, map[string]interface{}{
+		"code": 200,
+		"data": nil,
+		"msg":  "ok",
+	})
 }
 
 var (
