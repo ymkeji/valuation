@@ -7,14 +7,14 @@
 package main
 
 import (
-	"github.com/go-kratos/kratos/v2"
-	"github.com/go-kratos/kratos/v2/log"
 	"valuation/internal/biz"
 	"valuation/internal/conf"
 	"valuation/internal/data"
 	"valuation/internal/server"
 	"valuation/internal/service"
-	"valuation/pkg/storage"
+
+	"github.com/go-kratos/kratos/v2"
+	"github.com/go-kratos/kratos/v2/log"
 )
 
 // Injectors from wire.go:
@@ -22,15 +22,8 @@ import (
 // wireApp init kratos application.
 func wireApp(confServer *conf.Server, confData *conf.Data, logger log.Logger) (*kratos.App, func(), error) {
 	grpcServer := server.NewGRPCServer(confServer, logger)
-	db, err := storage.NewDB(confData)
-	if err != nil {
-		return nil, nil, err
-	}
-	client, err := storage.NewRedis(confData)
-	if err != nil {
-		return nil, nil, err
-	}
-	dataData, cleanup, err := data.NewData(confData, logger, db, client)
+
+	dataData, cleanup, err := data.NewData(confData, logger)
 	if err != nil {
 		return nil, nil, err
 	}

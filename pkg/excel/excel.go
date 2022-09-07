@@ -23,10 +23,29 @@ func NewMyExcel() *lzExcelExport {
 	return &lzExcelExport{file: createFile(), sheetName: defaultSheetName}
 }
 
+func ReadMyExcel(path string) (*lzExcelExport, error) {
+	f, err := excelize.OpenFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return &lzExcelExport{
+		file:      f,
+		sheetName: defaultSheetName,
+	}, nil
+}
+
+func (l *lzExcelExport) Search(value string, reg ...bool) (res []string, err error) {
+	res, err = l.file.SearchSheet(l.sheetName, value, reg...)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // 导出基本的表格
 func (l *lzExcelExport) ExportToPath(params []map[string]string, data []map[string]interface{}, path string) (string, error) {
 	l.export(params, data)
-	name := createFileName()
+	name := CreateFileName()
 	filePath := path + "/" + name
 	err := l.file.SaveAs(filePath)
 	return filePath, err
@@ -84,6 +103,42 @@ func (l *lzExcelExport) writeData(params []map[string]string, data []map[string]
 	_ = l.file.SetRowHeight(l.sheetName, len(data)+1, defaultHeight)
 }
 
+func (l *lzExcelExport) Rows(headRow int, params []map[string]string) (data []map[string]interface{}, err error) {
+	rows, err := l.file.Rows(l.sheetName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return readData(params, headRow, rows)
+}
+
+func readData(params []map[string]string, headRow int, rows *excelize.Rows) (data []map[string]interface{}, err error) {
+
+	for r, rNo := 0, 1; rows.Next(); rNo++ {
+		//数据开始行数
+		if headRow >= rNo {
+			continue
+		}
+		row, err := rows.Columns()
+		if err != nil {
+			fmt.Println(err)
+		}
+		data = append(data, map[string]interface{}{})
+		for _, conf := range params {
+			i, _ := strconv.Atoi(conf["id"])
+			isNull := conf["isNull"]
+			if isNull == "false" && row[i-1] == "" {
+				return nil, fmt.Errorf("%s is null | row is %d", conf["header"], rNo)
+			}
+
+			data[r][conf["key"]] = row[i-1]
+		}
+		r++
+	}
+	return data, nil
+
+}
+
 func (l *lzExcelExport) export(params []map[string]string, data []map[string]interface{}) {
 	l.writeTop(params)
 	l.writeData(params, data)
@@ -99,7 +154,7 @@ func createFile() *excelize.File {
 	return f
 }
 
-func createFileName() string {
+func CreateFileName() string {
 	name := time.Now().Format("2006-01-02-15-04-05")
 	rand.Seed(time.Now().UnixNano())
 	return fmt.Sprintf("excle-%v-%v.xlsx", name, rand.Int63n(time.Now().Unix()))

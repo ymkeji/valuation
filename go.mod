@@ -13,9 +13,12 @@ require (
 )
 
 require (
+	github.com/ThreeDotsLabs/watermill-amqp/v2 v2.0.6 // indirect
 	github.com/envoyproxy/protoc-gen-validate v0.6.7
+	github.com/go-chi/chi v4.0.2+incompatible // indirect
 	github.com/go-redis/redis/v9 v9.0.0-beta.2
 	github.com/golang-jwt/jwt/v4 v4.4.2 // indirect
+	github.com/gorilla/handlers v1.5.1 // indirect
 	github.com/joho/godotenv v1.4.0 // indirect
 	github.com/mozillazg/go-pinyin v0.19.0
 	github.com/xuri/excelize/v2 v2.6.1 // indirect
