@@ -31,7 +31,7 @@ type GoodHTTPServer interface {
 	DeleteGood(context.Context, *DeleteGoodsRequest) (*DeleteGoodsReply, error)
 	GetGood(context.Context, *GetGoodsRequest) (*GetGoodsReply, error)
 	ListGoods(context.Context, *ListGoodsRequest) (*ListGoodsReply, error)
-	ListGoodsByWords(context.Context, *ListGoodsByWordsRequest) (*ListGoodsReply, error)
+	ListGoodsByWords(context.Context, *ListGoodsByWordsRequest) (*ListGoodsByWordsReply, error)
 	UpdateGood(context.Context, *UpdateGoodsRequest) (*UpdateGoodsReply, error)
 }
 
@@ -40,7 +40,7 @@ func RegisterGoodHTTPServer(s *http.Server, srv GoodHTTPServer) {
 	r.POST("/good", _Good_CreateGood0_HTTP_Handler(srv))
 	r.PUT("/good", _Good_UpdateGood0_HTTP_Handler(srv))
 	r.DELETE("/good/{id}", _Good_DeleteGood0_HTTP_Handler(srv))
-	r.GET("/good/{id}", _Good_GetGood0_HTTP_Handler(srv))
+	r.GET("", _Good_GetGood0_HTTP_Handler(srv))
 	r.GET("/good/list", _Good_ListGoods0_HTTP_Handler(srv))
 	r.GET("/good/list/{words}", _Good_ListGoodsByWords0_HTTP_Handler(srv))
 }
@@ -111,9 +111,6 @@ func _Good_GetGood0_HTTP_Handler(srv GoodHTTPServer) func(ctx http.Context) erro
 		if err := ctx.BindQuery(&in); err != nil {
 			return err
 		}
-		if err := ctx.BindVars(&in); err != nil {
-			return err
-		}
 		http.SetOperation(ctx, OperationGoodGetGood)
 		h := ctx.Middleware(func(ctx context.Context, req interface{}) (interface{}, error) {
 			return srv.GetGood(ctx, req.(*GetGoodsRequest))
@@ -163,7 +160,7 @@ func _Good_ListGoodsByWords0_HTTP_Handler(srv GoodHTTPServer) func(ctx http.Cont
 		if err != nil {
 			return err
 		}
-		reply := out.(*ListGoodsReply)
+		reply := out.(*ListGoodsByWordsReply)
 		return ctx.Result(200, reply)
 	}
 }
@@ -173,7 +170,7 @@ type GoodHTTPClient interface {
 	DeleteGood(ctx context.Context, req *DeleteGoodsRequest, opts ...http.CallOption) (rsp *DeleteGoodsReply, err error)
 	GetGood(ctx context.Context, req *GetGoodsRequest, opts ...http.CallOption) (rsp *GetGoodsReply, err error)
 	ListGoods(ctx context.Context, req *ListGoodsRequest, opts ...http.CallOption) (rsp *ListGoodsReply, err error)
-	ListGoodsByWords(ctx context.Context, req *ListGoodsByWordsRequest, opts ...http.CallOption) (rsp *ListGoodsReply, err error)
+	ListGoodsByWords(ctx context.Context, req *ListGoodsByWordsRequest, opts ...http.CallOption) (rsp *ListGoodsByWordsReply, err error)
 	UpdateGood(ctx context.Context, req *UpdateGoodsRequest, opts ...http.CallOption) (rsp *UpdateGoodsReply, err error)
 }
 
@@ -213,7 +210,7 @@ func (c *GoodHTTPClientImpl) DeleteGood(ctx context.Context, in *DeleteGoodsRequ
 
 func (c *GoodHTTPClientImpl) GetGood(ctx context.Context, in *GetGoodsRequest, opts ...http.CallOption) (*GetGoodsReply, error) {
 	var out GetGoodsReply
-	pattern := "/good/{id}"
+	pattern := ""
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationGoodGetGood))
 	opts = append(opts, http.PathTemplate(pattern))
@@ -237,8 +234,8 @@ func (c *GoodHTTPClientImpl) ListGoods(ctx context.Context, in *ListGoodsRequest
 	return &out, err
 }
 
-func (c *GoodHTTPClientImpl) ListGoodsByWords(ctx context.Context, in *ListGoodsByWordsRequest, opts ...http.CallOption) (*ListGoodsReply, error) {
-	var out ListGoodsReply
+func (c *GoodHTTPClientImpl) ListGoodsByWords(ctx context.Context, in *ListGoodsByWordsRequest, opts ...http.CallOption) (*ListGoodsByWordsReply, error) {
+	var out ListGoodsByWordsReply
 	pattern := "/good/list/{words}"
 	path := binding.EncodeURL(pattern, in, true)
 	opts = append(opts, http.Operation(OperationGoodListGoodsByWords))

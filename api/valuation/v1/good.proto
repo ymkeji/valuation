@@ -29,7 +29,7 @@ service Good {
   };
   rpc GetGood (GetGoodsRequest) returns (GetGoodsReply){
     option (google.api.http) = {
-      get: "/good/{id}",
+      get: "",
     };
   };
   rpc ListGoods (ListGoodsRequest) returns (ListGoodsReply){
@@ -37,7 +37,7 @@ service Good {
       get: "/good/list",
     };
   };
-  rpc ListGoodsByWords (ListGoodsByWordsRequest) returns (ListGoodsReply){
+  rpc ListGoodsByWords (ListGoodsByWordsRequest) returns (ListGoodsByWordsReply){
     option (google.api.http) = {
       get: "/good/list/{words}",
     };
@@ -80,9 +80,16 @@ message GetGoodsReply {
 }
 
 message ListGoodsRequest {
+  uint64  pageNum = 1 [(validate.rules).uint64 = {gt:0}];
+  uint64  pageSize = 2  [(validate.rules).uint64 = {gt:0}];
 }
-
 message ListGoodsReply {
+  repeated GoodInfo goods = 1;
+  uint64  pageNum = 2;
+  uint64  pageSize = 3;
+  uint64  total = 4;
+}
+message ListGoodsByWordsReply {
   repeated GoodInfo goods = 1;
 }
 

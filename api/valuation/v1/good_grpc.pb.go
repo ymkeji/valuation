@@ -27,7 +27,7 @@ type GoodClient interface {
 	DeleteGood(ctx context.Context, in *DeleteGoodsRequest, opts ...grpc.CallOption) (*DeleteGoodsReply, error)
 	GetGood(ctx context.Context, in *GetGoodsRequest, opts ...grpc.CallOption) (*GetGoodsReply, error)
 	ListGoods(ctx context.Context, in *ListGoodsRequest, opts ...grpc.CallOption) (*ListGoodsReply, error)
-	ListGoodsByWords(ctx context.Context, in *ListGoodsByWordsRequest, opts ...grpc.CallOption) (*ListGoodsReply, error)
+	ListGoodsByWords(ctx context.Context, in *ListGoodsByWordsRequest, opts ...grpc.CallOption) (*ListGoodsByWordsReply, error)
 }
 
 type goodClient struct {
@@ -83,8 +83,8 @@ func (c *goodClient) ListGoods(ctx context.Context, in *ListGoodsRequest, opts .
 	return out, nil
 }
 
-func (c *goodClient) ListGoodsByWords(ctx context.Context, in *ListGoodsByWordsRequest, opts ...grpc.CallOption) (*ListGoodsReply, error) {
-	out := new(ListGoodsReply)
+func (c *goodClient) ListGoodsByWords(ctx context.Context, in *ListGoodsByWordsRequest, opts ...grpc.CallOption) (*ListGoodsByWordsReply, error) {
+	out := new(ListGoodsByWordsReply)
 	err := c.cc.Invoke(ctx, "/api.valuation.Good/ListGoodsByWords", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -101,7 +101,7 @@ type GoodServer interface {
 	DeleteGood(context.Context, *DeleteGoodsRequest) (*DeleteGoodsReply, error)
 	GetGood(context.Context, *GetGoodsRequest) (*GetGoodsReply, error)
 	ListGoods(context.Context, *ListGoodsRequest) (*ListGoodsReply, error)
-	ListGoodsByWords(context.Context, *ListGoodsByWordsRequest) (*ListGoodsReply, error)
+	ListGoodsByWords(context.Context, *ListGoodsByWordsRequest) (*ListGoodsByWordsReply, error)
 	mustEmbedUnimplementedGoodServer()
 }
 
@@ -124,7 +124,7 @@ func (UnimplementedGoodServer) GetGood(context.Context, *GetGoodsRequest) (*GetG
 func (UnimplementedGoodServer) ListGoods(context.Context, *ListGoodsRequest) (*ListGoodsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGoods not implemented")
 }
-func (UnimplementedGoodServer) ListGoodsByWords(context.Context, *ListGoodsByWordsRequest) (*ListGoodsReply, error) {
+func (UnimplementedGoodServer) ListGoodsByWords(context.Context, *ListGoodsByWordsRequest) (*ListGoodsByWordsReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListGoodsByWords not implemented")
 }
 func (UnimplementedGoodServer) mustEmbedUnimplementedGoodServer() {}

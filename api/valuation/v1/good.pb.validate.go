@@ -372,6 +372,8 @@ func (m *CreateGoodsReply) validate(all bool) error {
 
 	var errors []error
 
+	// no validation rules for Id
+
 	if len(errors) > 0 {
 		return CreateGoodsReplyMultiError(errors)
 	}
@@ -1109,6 +1111,28 @@ func (m *ListGoodsRequest) validate(all bool) error {
 
 	var errors []error
 
+	if m.GetPageNum() <= 0 {
+		err := ListGoodsRequestValidationError{
+			field:  "PageNum",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPageSize() <= 0 {
+		err := ListGoodsRequestValidationError{
+			field:  "PageSize",
+			reason: "value must be greater than 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
 	if len(errors) > 0 {
 		return ListGoodsRequestMultiError(errors)
 	}
@@ -1243,6 +1267,12 @@ func (m *ListGoodsReply) validate(all bool) error {
 
 	}
 
+	// no validation rules for PageNum
+
+	// no validation rules for PageSize
+
+	// no validation rules for Total
+
 	if len(errors) > 0 {
 		return ListGoodsReplyMultiError(errors)
 	}
@@ -1320,6 +1350,142 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = ListGoodsReplyValidationError{}
+
+// Validate checks the field values on ListGoodsByWordsReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the first error encountered is returned, or nil if there are no violations.
+func (m *ListGoodsByWordsReply) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on ListGoodsByWordsReply with the rules
+// defined in the proto definition for this message. If any rules are
+// violated, the result is a list of violation errors wrapped in
+// ListGoodsByWordsReplyMultiError, or nil if none found.
+func (m *ListGoodsByWordsReply) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *ListGoodsByWordsReply) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	for idx, item := range m.GetGoods() {
+		_, _ = idx, item
+
+		if all {
+			switch v := interface{}(item).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, ListGoodsByWordsReplyValidationError{
+						field:  fmt.Sprintf("Goods[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, ListGoodsByWordsReplyValidationError{
+						field:  fmt.Sprintf("Goods[%v]", idx),
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(item).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return ListGoodsByWordsReplyValidationError{
+					field:  fmt.Sprintf("Goods[%v]", idx),
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	}
+
+	if len(errors) > 0 {
+		return ListGoodsByWordsReplyMultiError(errors)
+	}
+
+	return nil
+}
+
+// ListGoodsByWordsReplyMultiError is an error wrapping multiple validation
+// errors returned by ListGoodsByWordsReply.ValidateAll() if the designated
+// constraints aren't met.
+type ListGoodsByWordsReplyMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ListGoodsByWordsReplyMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ListGoodsByWordsReplyMultiError) AllErrors() []error { return m }
+
+// ListGoodsByWordsReplyValidationError is the validation error returned by
+// ListGoodsByWordsReply.Validate if the designated constraints aren't met.
+type ListGoodsByWordsReplyValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ListGoodsByWordsReplyValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ListGoodsByWordsReplyValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ListGoodsByWordsReplyValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ListGoodsByWordsReplyValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ListGoodsByWordsReplyValidationError) ErrorName() string {
+	return "ListGoodsByWordsReplyValidationError"
+}
+
+// Error satisfies the builtin error interface
+func (e ListGoodsByWordsReplyValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sListGoodsByWordsReply.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ListGoodsByWordsReplyValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ListGoodsByWordsReplyValidationError{}
 
 // Validate checks the field values on ListGoodsByWordsRequest with the rules
 // defined in the proto definition for this message. If any rules are

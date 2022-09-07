@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"strings"
 
 	"valuation/internal/biz"
 	"valuation/pkg/storage"
@@ -27,6 +28,29 @@ func (g *goodRepo) GetGoodsByWords(ctx context.Context, words string) (goods []*
 	if res.Error != nil {
 		return nil, res.Error
 	}
+	return
+}
+
+func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, good *biz.Good) (size uint64, total uint64, goods []*biz.Good, err error) {
+	var (
+		db = g.data.db.Table("goods")
+		t  int64
+	)
+
+	if strings.Trim(good.Name, " ") != "" {
+		db.Where("name LIKE ? ", "%"+good.Name+"%")
+	}
+
+	if res := db.Count(&t); res.Error != nil {
+		return 0, 0, nil, res.Error
+	}
+
+	if res := db.Limit(int(pageSize)).Offset(int((pageNum - 1) * pageSize)).Find(&goods); res.Error != nil {
+		return 0, 0, nil, res.Error
+	}
+
+	size = uint64(len(goods))
+	total = uint64(t)
 	return
 }
 

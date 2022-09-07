@@ -2,6 +2,7 @@ package biz
 
 import (
 	"context"
+
 	"valuation/pkg/errorx"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -24,6 +25,7 @@ type GoodRepo interface {
 	ExistByName(context.Context, string) (bool, error)
 	ListAll(context.Context) ([]*Good, error)
 	GetGoodsByWords(context.Context, string) ([]*Good, error)
+	GetGoods(context.Context, uint64, uint64, *Good) (uint64, uint64, []*Good, error)
 }
 
 // GreeterUsecase is a Greeter usecase.
@@ -51,4 +53,9 @@ func (uc *GoodUsecase) CreateGood(ctx context.Context, g *Good) (*Good, error) {
 func (uc *GoodUsecase) GetGoodsByWords(ctx context.Context, words string) ([]*Good, error) {
 	uc.log.WithContext(ctx).Infof("words: %v\n", words)
 	return uc.repo.GetGoodsByWords(ctx, words)
+}
+
+func (uc *GoodUsecase) GetGoods(ctx context.Context, pageNum, pageSize uint64, g *Good) (uint64, uint64, []*Good, error) {
+	uc.log.WithContext(ctx).Infof("pageNum, pageSize,good: %d,	%d,	%v\n", pageNum, pageSize, g)
+	return uc.repo.GetGoods(ctx, pageNum, pageSize, g)
 }

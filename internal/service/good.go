@@ -55,9 +55,28 @@ func (s *GoodService) GetGood(ctx context.Context, req *pb.GetGoodsRequest) (*pb
 	return &pb.GetGoodsReply{}, nil
 }
 func (s *GoodService) ListGoods(ctx context.Context, req *pb.ListGoodsRequest) (*pb.ListGoodsReply, error) {
-	return &pb.ListGoodsReply{}, nil
+	pageSize, total, goods, err := s.uc.GetGoods(ctx, req.PageNum, req.PageSize, &biz.Good{})
+	errorx.Dangerous(err)
+	var goodsInfo []*pb.GoodInfo
+	for _, good := range goods {
+		goodsInfo = append(goodsInfo, &pb.GoodInfo{
+			Id:     good.Id,
+			Name:   good.Name,
+			Type:   good.Type,
+			Unit:   good.Unit,
+			Price:  good.Price,
+			Tariff: good.Tariff,
+			Alias:  good.Alias,
+		})
+	}
+	return &pb.ListGoodsReply{
+		Goods:    goodsInfo,
+		PageNum:  req.PageNum,
+		PageSize: pageSize,
+		Total:    total,
+	}, nil
 }
-func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByWordsRequest) (*pb.ListGoodsReply, error) {
+func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByWordsRequest) (*pb.ListGoodsByWordsReply, error) {
 	goods, err := s.uc.GetGoodsByWords(ctx, req.Words)
 	errorx.Dangerous(err)
 	var goodsInfo []*pb.GoodInfo
@@ -72,7 +91,7 @@ func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByW
 			Alias:  good.Alias,
 		})
 	}
-	return &pb.ListGoodsReply{Goods: goodsInfo}, nil
+	return &pb.ListGoodsByWordsReply{Goods: goodsInfo}, nil
 }
 
 var (
@@ -126,7 +145,10 @@ func GoodUpload(ctx http.Context) error {
 	filename := excel.CreateFileName()
 	fExcel, err := file.Create(path.Join(".", filename))
 	errorx.Dangerous(err)
-	defer fExcel.Close()
+	defer func() {
+		_ = fExcel.Close()
+		_ = file.Remove(path.Join(".", filename))
+	}()
 	_, err = io.Copy(fExcel, f)
 	errorx.Dangerous(err)
 
