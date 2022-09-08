@@ -1233,7 +1233,7 @@ func (m *ListGoodsReply) validate(all bool) error {
 
 	var errors []error
 
-	for idx, item := range m.GetGoods() {
+	for idx, item := range m.GetDataList() {
 		_, _ = idx, item
 
 		if all {
