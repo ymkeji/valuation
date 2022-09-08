@@ -67,6 +67,6 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             docker stop valuation && docker rm valuation
-            docker image prune -a
+            docker image prune -af
             docker pull ${{ env.IMAGE }}:${{ env.TAG }}
             docker run -d --name valuation -p ${{ secrets.SERVER_PORT }}:8000 --restart=always -e MYSQL_SOURCE -e REDIS_PASSWORD -e HOST ${{ env.IMAGE }}:${{ env.TAG }}
