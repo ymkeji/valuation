@@ -72,7 +72,8 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger)
 		})
 
 	})
-	route.POST("/good/upload", service.GoodUpload)
+	goods := service.GoodService{}
+	route.POST("/good/upload", goods.GoodUpload)
 	valuation.RegisterGoodHTTPServer(srv, good)
 	return srv
 }

@@ -94,43 +94,43 @@ func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByW
 	return &pb.ListGoodsByWordsReply{Goods: goodsInfo}, nil
 }
 
-var (
-	params = []map[string]string{
-		{
-			"id":     "0",
-			"key":    "name",
-			"header": "货物（劳务）名称",
-			"isNull": "false",
-		},
-		{
-			"id":     "0",
-			"key":    "type",
-			"header": "规格型号",
-			"isNull": "false",
-		},
-		{
-			"id":     "0",
-			"key":    "unit",
-			"header": "单位",
-			"isNull": "false",
-		},
-		{
-			"id":     "0",
-			"key":    "price",
-			"header": "金额",
-			"isNull": "false",
-		},
-		{
-			"id":     "0",
-			"key":    "tariff",
-			"header": "税率",
-			"isNull": "false",
-		},
-	}
-	headRow = 0
-)
+func (s *GoodService) GoodUpload(ctx http.Context) error {
+	var (
+		params = []map[string]string{
+			{
+				"id":     "0",
+				"key":    "name",
+				"header": "货物（劳务）名称",
+				"isNull": "false",
+			},
+			{
+				"id":     "0",
+				"key":    "type",
+				"header": "规格型号",
+				"isNull": "false",
+			},
+			{
+				"id":     "0",
+				"key":    "unit",
+				"header": "单位",
+				"isNull": "false",
+			},
+			{
+				"id":     "0",
+				"key":    "price",
+				"header": "金额",
+				"isNull": "false",
+			},
+			{
+				"id":     "0",
+				"key":    "tariff",
+				"header": "税率",
+				"isNull": "false",
+			},
+		}
+		headRow = 0
+	)
 
-func GoodUpload(ctx http.Context) error {
 	req := ctx.Request()
 	f, fHeader, err := req.FormFile("file")
 	errorx.Dangerous(err)
