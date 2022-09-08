@@ -70,7 +70,7 @@ func (s *GoodService) ListGoods(ctx context.Context, req *pb.ListGoodsRequest) (
 		})
 	}
 	return &pb.ListGoodsReply{
-		Goods:    goodsInfo,
+		DataList: goodsInfo,
 		PageNum:  req.PageNum,
 		PageSize: pageSize,
 		Total:    total,

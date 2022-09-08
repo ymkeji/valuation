@@ -168,7 +168,7 @@ components:
         api.valuation.ListGoodsReply:
             type: object
             properties:
-                goods:
+                dataList:
                     type: array
                     items:
                         $ref: '#/components/schemas/api.valuation.GoodInfo'

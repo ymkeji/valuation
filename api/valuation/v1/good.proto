@@ -84,7 +84,7 @@ message ListGoodsRequest {
   uint64  pageSize = 2  [(validate.rules).uint64 = {gt:0}];
 }
 message ListGoodsReply {
-  repeated GoodInfo goods = 1;
+  repeated GoodInfo dataList = 1;
   uint64  pageNum = 2;
   uint64  pageSize = 3;
   uint64  total = 4;
