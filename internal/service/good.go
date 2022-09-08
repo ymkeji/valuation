@@ -94,7 +94,7 @@ func (s *GoodService) ListGoodsByWords(ctx context.Context, req *pb.ListGoodsByW
 	return &pb.ListGoodsByWordsReply{Goods: goodsInfo}, nil
 }
 
-func GoodUpload(ctx http.Context) error {
+func (s *GoodService) GoodUpload(ctx http.Context) error {
 	var (
 		params = []map[string]string{
 			{
