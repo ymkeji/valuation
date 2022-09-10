@@ -55,7 +55,7 @@ func (s *GoodService) GetGood(ctx context.Context, req *pb.GetGoodsRequest) (*pb
 	return &pb.GetGoodsReply{}, nil
 }
 func (s *GoodService) ListGoods(ctx context.Context, req *pb.ListGoodsRequest) (*pb.ListGoodsReply, error) {
-	pageSize, total, goods, err := s.uc.GetGoods(ctx, req.PageNum, req.PageSize, &biz.Good{})
+	_, total, goods, err := s.uc.GetGoods(ctx, req.PageNum, req.PageSize, &biz.Good{})
 	errorx.Dangerous(err)
 	var goodsInfo []*pb.GoodInfo
 	for _, good := range goods {
@@ -72,7 +72,7 @@ func (s *GoodService) ListGoods(ctx context.Context, req *pb.ListGoodsRequest) (
 	return &pb.ListGoodsReply{
 		DataList: goodsInfo,
 		PageNum:  req.PageNum,
-		PageSize: pageSize,
+		PageSize: req.PageSize,
 		Total:    total,
 	}, nil
 }
