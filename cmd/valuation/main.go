@@ -4,18 +4,17 @@ import (
 	"flag"
 	"os"
 
-	"github.com/go-kratos/kratos/v2/config/env"
-	"github.com/joho/godotenv"
-
 	"valuation/internal/conf"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
+	"github.com/go-kratos/kratos/v2/config/env"
 	"github.com/go-kratos/kratos/v2/config/file"
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/middleware/tracing"
 	"github.com/go-kratos/kratos/v2/transport/grpc"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/joho/godotenv"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"

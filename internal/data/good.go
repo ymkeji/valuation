@@ -31,7 +31,7 @@ func (g *goodRepo) GetGoodsByWords(ctx context.Context, words string) (goods []*
 	return
 }
 
-func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, good *biz.Good) (size uint64, total uint64, goods []*biz.Good, err error) {
+func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, good *biz.Good) (total uint64, goods []*biz.Good, err error) {
 	var (
 		db = g.data.db.Table("goods")
 		t  int64
@@ -42,14 +42,13 @@ func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, good 
 	}
 
 	if res := db.Count(&t); res.Error != nil {
-		return 0, 0, nil, res.Error
+		return 0, nil, res.Error
+	}
+	// select * from goods where id >= (select id from goods limit 20, 1) limit 20
+	if res := db.Where("id >= (?)", g.data.db.Table("goods").Select("id").Limit(1).Offset(int((pageNum-1)*pageSize))).Limit(int(pageSize)).Find(&goods); res.Error != nil {
+		return 0, nil, res.Error
 	}
 
-	if res := db.Limit(int(pageSize)).Offset(int((pageNum - 1) * pageSize)).Find(&goods); res.Error != nil {
-		return 0, 0, nil, res.Error
-	}
-
-	size = uint64(len(goods))
 	total = uint64(t)
 	return
 }
@@ -93,16 +92,19 @@ func (g *goodRepo) ListAll(ctx context.Context) ([]*biz.Good, error) {
 	panic("implement me")
 }
 
-func InsertGoodsByExcel(data []map[string]interface{}) error {
+func InsertGoodsByExcel(data []map[string]interface{}) (RowsAffected int64, err error) {
+	if data == nil {
+		return
+	}
 	res := storage.DB.Table("goods").Model(&biz.Good{}).Create(data)
 	if res.Error != nil {
-		return res.Error
+		return 0, res.Error
 	}
-	return nil
+	return res.RowsAffected, nil
 }
 
-func HasGoodsByName(nameList []string) (goods []*biz.Good, err error) {
-	res := storage.DB.Table("goods").Model(&biz.Good{}).Where("name IN ?", nameList).Find(&goods)
+func GetNameList() (nameList []string, err error) {
+	res := storage.DB.Table("goods").Model(&biz.Good{}).Select("name").Find(&nameList)
 	if res.Error != nil {
 		return
 	}

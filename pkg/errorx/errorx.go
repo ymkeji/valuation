@@ -3,6 +3,8 @@ package errorx
 import (
 	"errors"
 	"fmt"
+
+	kratos "github.com/go-kratos/kratos/v2/errors"
 )
 
 type Error struct {
@@ -25,7 +27,9 @@ func FromError(err error) *Error {
 	if err == nil {
 		return nil
 	}
-	if se := new(Error); errors.As(err, &se) {
+	if se := new(kratos.Error); errors.As(err, &se) {
+		return &Error{Code: int(se.Code), Msg: se.Message}
+	} else if se := new(Error); errors.As(err, &se) {
 		return se
 	}
 	return &Error{Code: 500, Msg: err.Error()}

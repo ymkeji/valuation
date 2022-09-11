@@ -2,14 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"path"
 	"strconv"
 	"strings"
+	"valuation/internal/data"
 
 	pb "valuation/api/valuation/v1"
 	"valuation/internal/biz"
-	"valuation/internal/data"
 	"valuation/pkg/convertx"
 	"valuation/pkg/errorx"
 	"valuation/pkg/excel"
@@ -55,7 +56,7 @@ func (s *GoodService) GetGood(ctx context.Context, req *pb.GetGoodsRequest) (*pb
 	return &pb.GetGoodsReply{}, nil
 }
 func (s *GoodService) ListGoods(ctx context.Context, req *pb.ListGoodsRequest) (*pb.ListGoodsReply, error) {
-	_, total, goods, err := s.uc.GetGoods(ctx, req.PageNum, req.PageSize, &biz.Good{})
+	total, goods, err := s.uc.GetGoods(ctx, req.PageNum, req.PageSize, &biz.Good{})
 	errorx.Dangerous(err)
 	var goodsInfo []*pb.GoodInfo
 	for _, good := range goods {
@@ -101,41 +102,38 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 				"id":     "0",
 				"key":    "name",
 				"header": "货物（劳务）名称",
-				"isNull": "false",
 			},
 			{
 				"id":     "0",
 				"key":    "type",
 				"header": "规格型号",
-				"isNull": "false",
 			},
 			{
 				"id":     "0",
 				"key":    "unit",
 				"header": "单位",
-				"isNull": "false",
 			},
 			{
 				"id":     "0",
 				"key":    "price",
 				"header": "金额",
-				"isNull": "false",
 			},
 			{
 				"id":     "0",
 				"key":    "tariff",
 				"header": "税率",
-				"isNull": "false",
 			},
 		}
-		headRow = 0
+		headRow    = 0
+		errList    []excel.ExcelErr
+		insertData []map[string]interface{}
 	)
 
 	req := ctx.Request()
-	f, fHeader, err := req.FormFile("file")
+	f, fHeader, err := req.FormFile("excel")
 	errorx.Dangerous(err)
 	if fHeader.Size > 1024*1024*2 {
-		errorx.Bomb(500, "file size is too larger")
+		errorx.Bomb(500, "The file size can not exceed 2M")
 	} else if !strings.HasSuffix(fHeader.Filename, ".xlsx") {
 		errorx.Bomb(500, "file format is error")
 	}
@@ -173,152 +171,54 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 	}
 
 	//获取表数据
-	rows, err := myExcel.Rows(headRow, params)
+	rows, err := myExcel.ReadData(params, headRow)
 	errorx.Dangerous(err)
 
-	//获取alias
-	nameList := make([]string, 0, len(rows))
-	for _, row := range rows {
-		nameList = append(nameList, row["name"].(string))
-		row["alias"] = convertx.Chinese2Spell(row["name"].(string))
-	}
-
-	//检查是否有重复name
-	goods, err := data.HasGoodsByName(nameList)
+	//获取数据库nameList && 转成name map
+	nameList, err := data.GetNameList()
 	errorx.Dangerous(err)
-	if len(goods) == len(rows) {
-		errorx.Bomb(201, "all goods is exist")
+	nameMap := make(map[string]int, len(nameList))
+	for i, name := range nameList {
+		nameMap[name] = i
 	}
 
-	//去除重复name
-	for _, good := range goods {
-		for i, row := range rows {
-			if row["name"] == good.Name {
-				rows[i] = rows[len(rows)-1]
-				rows = rows[:len(rows)-1]
+	//填充数据
+CONTINUE:
+	for r, row := range rows {
+		//检查数据
+		for _, conf := range params {
+			if row[conf["key"]] == "" {
+				errList = append(errList, excel.ExcelErr{
+					Row: r + headRow + 1,
+					Msg: fmt.Sprintf("%s 为空", conf["header"]),
+				})
+				continue CONTINUE
+			} else if conf["key"] == "name" {
+				if _, ok := nameMap[row["name"].(string)]; ok {
+					errList = append(errList, excel.ExcelErr{
+						Row: r + headRow + 1,
+						Msg: fmt.Sprintf("%s 已存在", row["name"]),
+					})
+					continue CONTINUE
+				}
 			}
 		}
+		//获取alias
+		row["alias"] = convertx.Chinese2Spell(row["name"].(string))
+		insertData = append(insertData, row)
 	}
 
 	//插入数据库
-	errorx.Dangerous(data.InsertGoodsByExcel(rows))
+	successNum, err := data.InsertGoodsByExcel(insertData)
+	errorx.Dangerous(err)
 
 	return ctx.JSON(200, map[string]interface{}{
 		"code": 200,
-		"data": nil,
-		"msg":  "ok",
-	})
-}
-
-var (
-	params = []map[string]string{
-		{
-			"id":     "0",
-			"key":    "name",
-			"header": "货物（劳务）名称",
-			"isNull": "false",
+		"data": map[string]interface{}{
+			"successNum": successNum,
+			"failNum":    len(errList),
+			"errList":    errList,
 		},
-		{
-			"id":     "0",
-			"key":    "type",
-			"header": "规格型号",
-			"isNull": "false",
-		},
-		{
-			"id":     "0",
-			"key":    "unit",
-			"header": "单位",
-			"isNull": "false",
-		},
-		{
-			"id":     "0",
-			"key":    "price",
-			"header": "金额",
-			"isNull": "false",
-		},
-		{
-			"id":     "0",
-			"key":    "tariff",
-			"header": "税率",
-			"isNull": "false",
-		},
-	}
-	headRow = 0
-)
-
-func GoodUpload(ctx http.Context) error {
-	req := ctx.Request()
-	f, fHeader, err := req.FormFile("file")
-	errorx.Dangerous(err)
-	if fHeader.Size > 1024*1024*2 {
-		errorx.Bomb(500, "file size is too larger")
-	} else if !strings.HasSuffix(fHeader.Filename, ".xlsx") {
-		errorx.Bomb(500, "file format is error")
-	}
-	defer f.Close()
-
-	//excel落盘
-	filename := excel.CreateFileName()
-	fExcel, err := file.Create(path.Join(".", filename))
-	errorx.Dangerous(err)
-	defer fExcel.Close()
-	_, err = io.Copy(fExcel, f)
-	errorx.Dangerous(err)
-
-	//获取excel表
-	myExcel, err := excel.ReadMyExcel(path.Join(".", filename))
-	errorx.Dangerous(err)
-
-	//检查表头
-	for _, conf := range params {
-		search, err := myExcel.Search(conf["header"])
-		errorx.Dangerous(err)
-		if search == nil {
-			errorx.Bomb(500, "tableHeader %s not found", conf["header"])
-		}
-		x, y, err := excelize.CellNameToCoordinates(search[0])
-		errorx.Dangerous(err)
-		if headRow != 0 && y != headRow {
-			errorx.Bomb(500, "tableHeader format error")
-		}
-		headRow = y
-		conf["id"] = strconv.Itoa(x)
-	}
-
-	//获取表数据
-	rows, err := myExcel.Rows(headRow, params)
-	errorx.Dangerous(err)
-
-	//获取alias
-	nameList := make([]string, 0, len(rows))
-	for _, row := range rows {
-		nameList = append(nameList, row["name"].(string))
-		row["alias"] = convertx.Chinese2Spell(row["name"].(string))
-	}
-
-	//检查是否有重复name
-	goods, err := data.HasGoodsByName(nameList)
-	errorx.Dangerous(err)
-	if len(goods) == len(rows) {
-		errorx.Bomb(201, "all goods is exist")
-	}
-
-	//去除重复name
-	for _, good := range goods {
-		for i, row := range rows {
-			if row["name"] == good.Name {
-				rows[i] = rows[len(rows)-1]
-				rows = rows[:len(rows)-1]
-			}
-		}
-	}
-
-	//插入数据库
-	errorx.Dangerous(data.InsertGoodsByExcel(rows))
-
-	return ctx.JSON(200, map[string]interface{}{
-		"code": 200,
-		"data": nil,
-		"msg":  "ok",
+		"msg": "ok",
 	})
 }
