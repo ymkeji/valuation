@@ -44,8 +44,8 @@ func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, good 
 	if res := db.Count(&t); res.Error != nil {
 		return 0, nil, res.Error
 	}
-
-	if res := db.Where("id >= (?)", g.data.db.Table("goods").Select("id").Order("id asc").Limit(1).Offset(int((pageNum-1)*pageSize))).Order("id asc").Limit(int(pageSize)).Find(&goods); res.Error != nil {
+	// select * from goods where id >= (select id from goods limit 20, 1) limit 20
+	if res := db.Where("id >= (?)", g.data.db.Table("goods").Select("id").Limit(1).Offset(int((pageNum-1)*pageSize))).Limit(int(pageSize)).Find(&goods); res.Error != nil {
 		return 0, nil, res.Error
 	}
 

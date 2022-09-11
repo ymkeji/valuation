@@ -189,14 +189,14 @@ CONTINUE:
 		for _, conf := range params {
 			if row[conf["key"]] == "" {
 				errList = append(errList, excel.ExcelErr{
-					Row: r + headRow,
+					Row: r + headRow + 1,
 					Msg: fmt.Sprintf("%s 为空", conf["header"]),
 				})
 				continue CONTINUE
 			} else if conf["key"] == "name" {
 				if _, ok := nameMap[row["name"].(string)]; ok {
 					errList = append(errList, excel.ExcelErr{
-						Row: r + headRow,
+						Row: r + headRow + 1,
 						Msg: fmt.Sprintf("%s 已存在", row["name"]),
 					})
 					continue CONTINUE
