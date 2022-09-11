@@ -19,6 +19,11 @@ type lzExcelExport struct {
 	sheetName string //可定义默认sheet名称
 }
 
+type ExcelErr struct {
+	Row int
+	Msg string
+}
+
 func NewMyExcel() *lzExcelExport {
 	return &lzExcelExport{file: createFile(), sheetName: defaultSheetName}
 }
@@ -103,17 +108,13 @@ func (l *lzExcelExport) writeData(params []map[string]string, data []map[string]
 	_ = l.file.SetRowHeight(l.sheetName, len(data)+1, defaultHeight)
 }
 
-func (l *lzExcelExport) Rows(headRow int, params []map[string]string) (data []map[string]interface{}, err error) {
+// ReadData 读取数据
+func (l *lzExcelExport) ReadData(params []map[string]string, headRow int) (data []map[string]interface{}, err error) {
 	rows, err := l.file.Rows(l.sheetName)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	return readData(params, headRow, rows)
-}
-
-func readData(params []map[string]string, headRow int, rows *excelize.Rows) (data []map[string]interface{}, err error) {
-
 	for r, rNo := 0, 1; rows.Next(); rNo++ {
 		//数据开始行数
 		if headRow >= rNo {
@@ -121,21 +122,16 @@ func readData(params []map[string]string, headRow int, rows *excelize.Rows) (dat
 		}
 		row, err := rows.Columns()
 		if err != nil {
-			fmt.Println(err)
+			return nil, err
 		}
 		data = append(data, map[string]interface{}{})
 		for _, conf := range params {
 			i, _ := strconv.Atoi(conf["id"])
-			isNull := conf["isNull"]
-			if isNull == "false" && row[i-1] == "" {
-				return nil, fmt.Errorf("%s is null | row is %d", conf["header"], rNo)
-			}
-
 			data[r][conf["key"]] = row[i-1]
 		}
 		r++
 	}
-	return data, nil
+	return
 
 }
 
