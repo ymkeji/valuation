@@ -2,7 +2,7 @@
 --
 -- Host: 180.76.246.37    Database: valuation
 -- ------------------------------------------------------
--- Server version	8.0.15
+-- Server version	8.0.30
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -23,15 +23,16 @@ DROP TABLE IF EXISTS `goods`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `goods` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(20) NOT NULL DEFAULT '',
   `type` varchar(10) NOT NULL DEFAULT '',
   `unit` varchar(10) NOT NULL DEFAULT '',
   `price` decimal(10,2) NOT NULL,
   `tariff` float unsigned NOT NULL DEFAULT '0',
-  `alias` varchar(64) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `alias` varchar(64) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `索引_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=118 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -40,7 +41,7 @@ CREATE TABLE `goods` (
 
 LOCK TABLES `goods` WRITE;
 /*!40000 ALTER TABLE `goods` DISABLE KEYS */;
-INSERT INTO `goods` VALUES (1,'五花肉','优','斤',15.80,0,'wuhuarou'),(2,'茄子','优','斤',1.20,0,'qiezi'),(3,'白萝卜','优','斤',1.40,0,'bailuobo'),(4,'狗肉','优','斤',5.00,0,'gourou'),(5,'油饼','优','个',0.50,0,'youbing'),(6,'大蒜','优','斤',0.50,0,'dasuan'),(7,'肉丝','优','斤',12.00,0,'rousi'),(8,'排骨','优','斤',15.30,0,'paigu'),(9,'圆红','优','斤',22.30,0,'yuanhong'),(10,'羊肉','优','斤',33.40,0,'yangrou'),(11,'花甲','优','斤',122.00,0,'huajia'),(12,'虾尾','优','件',1.20,0,'xiawei'),(13,'青笋','优','斤',123.00,0,'qingsun'),(14,'肉片子','优','斤',3.43,0,'roupianzi'),(15,'羊肉卷','优','个',1.40,0,'yangroujuan'),(16,'香菜','优','斤',15.30,0,'xiangcai'),(17,'大饼','优','个',12.30,0,'dabing'),(18,'龙椒','优','斤',1.04,0,'longjiao'),(19,'枣糕','优','斤',2.04,0,'zaogao'),(20,'面包','优','斤',3.04,0,'mianbao'),(21,'面条','优','斤',1.02,0,'miantiao'),(22,'白菜','优','斤',0.23,0,'baicai'),(23,'豆腐','优','斤',3.90,0,'doufu');
+INSERT INTO `goods` VALUES (1,'豆腐','优','斤',30.24,0,'doufu'),(2,'五花肉','优','斤',15.80,0,'wuhuarou'),(3,'茄子','优','斤',1.20,0,'jiazi'),(4,'白萝卜','优','斤',1.40,0,'bailuobo'),(5,'狗肉','优','斤',5.00,0,'gourou'),(6,'油饼','优','个',0.50,0,'youbing'),(7,'大蒜','优','斤',0.50,0,'dasuan'),(8,'肉丝','优','斤',12.00,0,'rousi'),(9,'排骨','优','斤',15.30,0,'paigu'),(10,'圆红','优','斤',22.30,0,'yuanhong'),(11,'羊肉','优','斤',33.40,0,'yangrou'),(12,'花甲','优','斤',122.00,0,'huajia'),(13,'虾尾','优','件',1.20,0,'xiawei'),(14,'青笋','优','斤',123.00,0,'qingsun'),(15,'肉片子','优','斤',3.43,0,'roupianzi'),(16,'羊肉卷','优','个',1.40,0,'yangroujuan'),(17,'香菜','优','斤',15.30,0,'xiangcai'),(18,'大饼','优','个',12.30,0,'dabing'),(19,'龙椒','优','斤',1.04,0,'longjiao'),(20,'枣糕','优','斤',2.04,0,'zaogao'),(21,'面包','优','斤',3.04,0,'mianbao'),(22,'面条','优','斤',1.02,0,'miantiao'),(23,'白菜','优','斤',0.23,0,'baicai');
 /*!40000 ALTER TABLE `goods` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -53,4 +54,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2022-08-23 12:22:01
+-- Dump completed on 2022-09-13 15:40:16

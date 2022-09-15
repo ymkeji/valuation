@@ -17,3 +17,5 @@ data:
     db: 0
     read_timeout: 0.2s
     write_timeout: 0.2s
+rabbit:
+  amqpURI:  "${AMQP_URI}"
