@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"valuation/internal/conf"
+	"valuation/pkg/watermill"
 
 	"github.com/go-kratos/kratos/v2"
 	"github.com/go-kratos/kratos/v2/config"
@@ -79,6 +80,8 @@ func main() {
 	if err := c.Scan(&bc); err != nil {
 		panic(err)
 	}
+
+	watermill.RabbitConfig = bc.Rabbit
 
 	app, cleanup, err := wireApp(bc.Server, bc.Data, logger)
 	if err != nil {
