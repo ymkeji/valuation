@@ -22,23 +22,47 @@ func NewGoodRepo(data *Data, logger log.Logger) biz.GoodRepo {
 	}
 }
 
+type Good struct {
+	Id     uint64  ` json:"id,omitempty"`
+	Name   string  ` json:"name,omitempty"`
+	Type   string  ` json:"type,omitempty"`
+	Unit   string  ` json:"unit,omitempty"`
+	Price  float32 ` json:"price,omitempty"`
+	Tariff float32 ` json:"tariff,omitempty"`
+	Alias  string  ` json:"alias,omitempty"`
+}
+
 // GetGoodsByWords select * from goods where name like '%words%' or alias like '%words%'
-func (g *goodRepo) GetGoodsByWords(ctx context.Context, words string) (goods []*biz.Good, err error) {
+func (g *goodRepo) GetGoodsByWords(ctx context.Context, words string) (goodList []*biz.Good, err error) {
+	var goods []Good
 	res := g.data.db.Where("name LIKE ? or alias LIKE ?", "%"+words+"%", "%"+words+"%").Find(&goods)
 	if res.Error != nil {
 		return nil, res.Error
 	}
+
+	for _, good := range goods {
+		goodList = append(goodList, &biz.Good{
+			Id:     good.Id,
+			Name:   good.Name,
+			Type:   good.Type,
+			Unit:   good.Unit,
+			Price:  good.Price,
+			Tariff: good.Tariff,
+			Alias:  good.Alias,
+		})
+	}
 	return
 }
 
-func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, good *biz.Good) (total uint64, goods []*biz.Good, err error) {
+func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, goodInfo *biz.Good) (total uint64, goodList []*biz.Good, err error) {
 	var (
-		db = g.data.db.Table("goods")
-		t  int64
+		goods []Good
+		db    = g.data.db.Table("goods")
+		t     int64
 	)
 
-	if strings.Trim(good.Name, " ") != "" {
-		db.Where("name LIKE ? ", "%"+good.Name+"%")
+	if strings.Trim(goodInfo.Name, " ") != "" {
+		db.Where("name LIKE ? ", "%"+goodInfo.Name+"%")
 	}
 
 	if res := db.Count(&t); res.Error != nil {
@@ -47,6 +71,18 @@ func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, good 
 	// select * from goods where id >= (select id from goods limit 20, 1) limit 20
 	if res := db.Where("id >= (?)", g.data.db.Table("goods").Select("id").Limit(1).Offset(int((pageNum-1)*pageSize))).Limit(int(pageSize)).Find(&goods); res.Error != nil {
 		return 0, nil, res.Error
+	}
+
+	for _, good := range goods {
+		goodList = append(goodList, &biz.Good{
+			Id:     good.Id,
+			Name:   good.Name,
+			Type:   good.Type,
+			Unit:   good.Unit,
+			Price:  good.Price,
+			Tariff: good.Tariff,
+			Alias:  good.Alias,
+		})
 	}
 
 	total = uint64(t)
@@ -58,12 +94,30 @@ func (g *goodRepo) Delete(ctx context.Context, good *biz.Good) (*biz.Good, error
 	panic("implement me")
 }
 
-func (g *goodRepo) Save(ctx context.Context, good *biz.Good) (*biz.Good, error) {
+func (g *goodRepo) Save(ctx context.Context, goodInfo *biz.Good) (*biz.Good, error) {
+	good := Good{
+		Id:     goodInfo.Id,
+		Name:   goodInfo.Name,
+		Type:   goodInfo.Type,
+		Unit:   goodInfo.Unit,
+		Price:  goodInfo.Price,
+		Tariff: goodInfo.Tariff,
+		Alias:  goodInfo.Alias,
+	}
+
 	res := g.data.db.Create(good)
 	if res.Error != nil {
-		return good, res.Error
+		return nil, res.Error
 	}
-	return good, nil
+	return &biz.Good{
+		Id:     good.Id,
+		Name:   good.Name,
+		Type:   good.Type,
+		Unit:   good.Unit,
+		Price:  good.Price,
+		Tariff: good.Tariff,
+		Alias:  good.Alias,
+	}, nil
 }
 
 func (g *goodRepo) Update(ctx context.Context, good *biz.Good) (*biz.Good, error) {
@@ -96,7 +150,7 @@ func InsertGoodsByExcel(data []map[string]interface{}) (RowsAffected int64, err 
 	if data == nil {
 		return
 	}
-	res := storage.DB.Table("goods").Model(&biz.Good{}).Create(data)
+	res := storage.DB.Table("goods").Model(&Good{}).Create(data)
 	if res.Error != nil {
 		return 0, res.Error
 	}
@@ -104,7 +158,7 @@ func InsertGoodsByExcel(data []map[string]interface{}) (RowsAffected int64, err 
 }
 
 func GetNameList() (nameList []string, err error) {
-	res := storage.DB.Table("goods").Model(&biz.Good{}).Select("name").Find(&nameList)
+	res := storage.DB.Table("goods").Model(&Good{}).Select("name").Find(&nameList)
 	if res.Error != nil {
 		return
 	}
