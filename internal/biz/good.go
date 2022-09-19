@@ -2,8 +2,7 @@ package biz
 
 import (
 	"context"
-
-	"valuation/pkg/errorx"
+	"fmt"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
@@ -43,9 +42,11 @@ func NewGoodUsecase(repo GoodRepo, logger log.Logger) *GoodUsecase {
 func (uc *GoodUsecase) CreateGood(ctx context.Context, g *Good) (*Good, error) {
 	uc.log.WithContext(ctx).Infof("CreateGood: %v ", g)
 	exist, err := uc.repo.ExistByName(ctx, g.Name)
-	errorx.Dangerous(err)
+	if err != nil {
+		return nil, err
+	}
 	if exist {
-		errorx.Bomb(201, "good is already exist")
+		return nil, fmt.Errorf("good is already exist")
 	}
 	return uc.repo.Save(ctx, g)
 }

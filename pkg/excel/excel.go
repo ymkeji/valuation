@@ -124,6 +124,9 @@ func (l *lzExcelExport) ReadData(params []map[string]string, headRow int) (data 
 		if err != nil {
 			return nil, err
 		}
+		if len(row) == 0 || len(row) < len(params) {
+			break
+		}
 		data = append(data, map[string]interface{}{})
 		for _, conf := range params {
 			i, _ := strconv.Atoi(conf["id"])
