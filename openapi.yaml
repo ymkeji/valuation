@@ -3,7 +3,7 @@
 
 openapi: 3.0.3
 info:
-    title: Good API
+    title: ""
     version: 0.0.1
 paths:
     "":
@@ -119,6 +119,24 @@ paths:
                         application/json:
                             schema:
                                 $ref: '#/components/schemas/api.valuation.DeleteGoodsReply'
+    /user/login:
+        post:
+            tags:
+                - User
+            operationId: User_UserLogin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/api.valuation.v1.UserLoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/api.valuation.v1.UserLoginReply'
 components:
     schemas:
         api.valuation.CreateGoodsReply:
@@ -189,5 +207,17 @@ components:
             properties:
                 good:
                     $ref: '#/components/schemas/api.valuation.GoodInfo'
+        api.valuation.v1.UserLoginReply:
+            type: object
+            properties:
+                accessToken:
+                    type: string
+        api.valuation.v1.UserLoginRequest:
+            type: object
+            properties:
+                id:
+                    type: integer
+                    format: uint64
 tags:
     - name: Good
+    - name: User

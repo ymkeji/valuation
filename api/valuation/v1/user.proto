@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package api.valuation.v1;
+
+option go_package = "valuation/api/valuation;valuation";
+
+import "google/api/annotations.proto";
+import "google/protobuf/datetime.proto";
+import "google/protobuf/date.proto";
+import "validate/validate.proto";
+
+
+service User {
+  rpc UserLogin (UserLoginRequest) returns (UserLoginReply) {
+    option (google.api.http) = {
+      post: "/user/login",
+      body: "*",
+    };
+  }
+}
+
+message UserInfo{
+  uint64 id = 1 [(validate.rules).uint64 = {ignore_empty: true,gt:0}];
+  string name = 2 [(validate.rules).string = {min_len: 1, max_len: 16}];
+  string password = 3 [(validate.rules).string = {min_len: 1, max_len: 20}];
+  string avatar = 4 [(validate.rules).string = {min_len: 1, max_len: 64}];
+  google.protobuf.Date expiration = 5 ;
+  google.protobuf.DateTime createTime = 6 ;
+}
+
+message UserLoginRequest {
+  uint64 id = 1 ;
+}
+message UserLoginReply {
+  string access_token = 1;
+}

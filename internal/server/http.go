@@ -13,11 +13,10 @@ import (
 	"github.com/go-kratos/kratos/v2/encoding"
 	"github.com/go-kratos/kratos/v2/log"
 	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
-	"github.com/golang-jwt/jwt/v4"
 )
 
 // NewHTTPServer new a HTTP server.
-func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger) *kratosHttp.Server {
+func NewHTTPServer(c *conf.Server, good *service.GoodService, user *service.UserService, logger log.Logger) *kratosHttp.Server {
 	var opts = []kratosHttp.ServerOption{
 		kratosHttp.ResponseEncoder(encodeResponseFunc),
 		kratosHttp.ErrorEncoder(errorEncoder),
@@ -47,34 +46,10 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger)
 			handlers.AllowedOrigins([]string{"*"}),
 			handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT"}),
 		))
-	route.GET("/login", func(c kratosHttp.Context) error {
-		mySigningKey := []byte("AllYourBase")
-		o := &struct {
-			signingMethod jwt.SigningMethod
-			claims        jwt.Claims
-		}{
-			signingMethod: jwt.SigningMethodHS256,
-			claims: jwt.RegisteredClaims{
-				ID: "1",
-			},
-		}
-		token := jwt.NewWithClaims(o.signingMethod, o.claims)
-		tokenString, err := token.SignedString(mySigningKey)
-		if err != nil {
-			return err
-		}
-		return c.JSON(200, map[string]interface{}{
-			"msg": "ok",
-			"data": map[string]interface{}{
-				"access_token": tokenString,
-			},
-			"code": 200,
-		})
-
-	})
 	goods := service.GoodService{}
 	route.POST("/good/upload", goods.GoodUpload)
 	valuation.RegisterGoodHTTPServer(srv, good)
+	valuation.RegisterUserHTTPServer(srv, user)
 	return srv
 }
 
