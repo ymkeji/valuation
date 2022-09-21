@@ -3,8 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"io"
-	"path"
 	"strconv"
 	"strings"
 	"valuation/internal/data"
@@ -14,7 +12,6 @@ import (
 	"valuation/pkg/convertx"
 	"valuation/pkg/errorx"
 	"valuation/pkg/excel"
-	"valuation/pkg/file"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport/http"
@@ -139,19 +136,8 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 	}
 	defer f.Close()
 
-	//excel落盘
-	filename := excel.CreateFileName()
-	fExcel, err := file.Create(path.Join(".", filename))
-	errorx.Dangerous(err)
-	defer func() {
-		_ = fExcel.Close()
-		_ = file.Remove(path.Join(".", filename))
-	}()
-	_, err = io.Copy(fExcel, f)
-	errorx.Dangerous(err)
-
 	//获取excel表
-	myExcel, err := excel.ReadMyExcel(path.Join(".", filename))
+	myExcel, err := excel.ReadMyExcel(f)
 	errorx.Dangerous(err)
 
 	//检查表头
