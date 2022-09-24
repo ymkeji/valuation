@@ -157,8 +157,8 @@ func InsertGoodsByExcel(data []map[string]interface{}) (RowsAffected int64, err 
 	return res.RowsAffected, nil
 }
 
-func GetNameList() (nameList []string, err error) {
-	res := storage.DB.Table("goods").Model(&Good{}).Select("name").Find(&nameList)
+func ExistsNameList(nameList []string) (exists []string, err error) {
+	res := storage.DB.Table("goods").Model(&Good{}).Select("name").Where(map[string]interface{}{"name": nameList}).Find(&exists)
 	if res.Error != nil {
 		return
 	}

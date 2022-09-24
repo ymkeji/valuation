@@ -158,6 +158,7 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 		conf["id"] = strconv.Itoa(x)
 	}
 
+	// 串形化操作
 	for {
 		ok := storage.Redis.SetNX(context.Background(), "excel", "1", 2*time.Second)
 		if ok.Val() {
@@ -167,16 +168,27 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 			errorx.Dangerous(ok.Err())
 		}
 	}
+	defer func() {
+		storage.Redis.Del(context.Background(), "excel")
+	}()
 
 	//获取表数据
 	rows, err := myExcel.ReadData(params, headRow)
 	errorx.Dangerous(err)
 
-	//获取数据库nameList && 转成name map
-	nameList, err := data.GetNameList()
+	//获取nameList
+	nameList := make([]string, 0)
+	for _, row := range rows {
+		if name, ok := row["name"].(string); ok && name != "" {
+			nameList = append(nameList, name)
+		}
+	}
+
+	//获取数据库已存在的nameList && 转成name map
+	existsList, err := data.ExistsNameList(nameList)
 	errorx.Dangerous(err)
-	nameMap := make(map[string]int, len(nameList))
-	for i, name := range nameList {
+	nameMap := make(map[string]int, len(existsList))
+	for i, name := range existsList {
 		nameMap[name] = i
 	}
 
