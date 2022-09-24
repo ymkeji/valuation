@@ -13,7 +13,8 @@ import (
 )
 
 var (
-	DB *gorm.DB
+	DB    *gorm.DB
+	Redis *redis.Client
 )
 
 func NewDB(c *conf.Data) (*gorm.DB, error) {
@@ -34,7 +35,7 @@ func NewDB(c *conf.Data) (*gorm.DB, error) {
 }
 
 func NewRedis(c *conf.Data) (*redis.Client, error) {
-	redis := redis.NewClient(&redis.Options{
+	Redis = redis.NewClient(&redis.Options{
 		Addr:         fmt.Sprintf("%s:%d", c.Redis.Host, c.Redis.Port),
 		Password:     c.Redis.Password, // no password set
 		Username:     c.Redis.Username,
@@ -43,9 +44,9 @@ func NewRedis(c *conf.Data) (*redis.Client, error) {
 		ReadTimeout:  c.Redis.ReadTimeout.AsDuration(),
 	})
 
-	_, err := redis.Ping(context.Background()).Result()
+	_, err := Redis.Ping(context.Background()).Result()
 	if err != nil {
 		return nil, err
 	}
-	return redis, nil
+	return Redis, nil
 }

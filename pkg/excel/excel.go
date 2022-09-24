@@ -2,6 +2,7 @@ package excel
 
 import (
 	"fmt"
+	"io"
 	"math/rand"
 	"strconv"
 	"time"
@@ -14,7 +15,7 @@ var (
 	defaultHeight    = 25.0     //默认行高度
 )
 
-type lzExcelExport struct {
+type LzExcelExport struct {
 	file      *excelize.File
 	sheetName string //可定义默认sheet名称
 }
@@ -24,22 +25,22 @@ type ExcelErr struct {
 	Msg string
 }
 
-func NewMyExcel() *lzExcelExport {
-	return &lzExcelExport{file: createFile(), sheetName: defaultSheetName}
+func NewMyExcel() *LzExcelExport {
+	return &LzExcelExport{file: createFile(), sheetName: defaultSheetName}
 }
 
-func ReadMyExcel(path string) (*lzExcelExport, error) {
-	f, err := excelize.OpenFile(path)
+func ReadMyExcel(r io.Reader, opt ...excelize.Options) (*LzExcelExport, error) {
+	f, err := excelize.OpenReader(r, opt...)
 	if err != nil {
 		return nil, err
 	}
-	return &lzExcelExport{
+	return &LzExcelExport{
 		file:      f,
 		sheetName: defaultSheetName,
 	}, nil
 }
 
-func (l *lzExcelExport) Search(value string, reg ...bool) (res []string, err error) {
+func (l *LzExcelExport) Search(value string, reg ...bool) (res []string, err error) {
 	res, err = l.file.SearchSheet(l.sheetName, value, reg...)
 	if err != nil {
 		return
@@ -48,7 +49,7 @@ func (l *lzExcelExport) Search(value string, reg ...bool) (res []string, err err
 }
 
 // 导出基本的表格
-func (l *lzExcelExport) ExportToPath(params []map[string]string, data []map[string]interface{}, path string) (string, error) {
+func (l *LzExcelExport) ExportToPath(params []map[string]string, data []map[string]interface{}, path string) (string, error) {
 	l.export(params, data)
 	name := CreateFileName()
 	filePath := path + "/" + name
@@ -57,7 +58,7 @@ func (l *lzExcelExport) ExportToPath(params []map[string]string, data []map[stri
 }
 
 // 设置首行
-func (l *lzExcelExport) writeTop(params []map[string]string) {
+func (l *LzExcelExport) writeTop(params []map[string]string) {
 	topStyle, _ := l.file.NewStyle(`{"font":{"bold":true},"alignment":{"horizontal":"center","vertical":"center"}}`)
 	var word = 'A'
 	//首行写入
@@ -76,7 +77,7 @@ func (l *lzExcelExport) writeTop(params []map[string]string) {
 }
 
 // 写入数据
-func (l *lzExcelExport) writeData(params []map[string]string, data []map[string]interface{}) {
+func (l *LzExcelExport) writeData(params []map[string]string, data []map[string]interface{}) {
 	lineStyle, _ := l.file.NewStyle(`{"alignment":{"horizontal":"center","vertical":"center"}}`)
 	//数据写入
 	var j = 2 //数据开始行数
@@ -109,7 +110,7 @@ func (l *lzExcelExport) writeData(params []map[string]string, data []map[string]
 }
 
 // ReadData 读取数据
-func (l *lzExcelExport) ReadData(params []map[string]string, headRow int) (data []map[string]interface{}, err error) {
+func (l *LzExcelExport) ReadData(params []map[string]string, headRow int) (data []map[string]interface{}, err error) {
 	rows, err := l.file.Rows(l.sheetName)
 	if err != nil {
 		return nil, err
@@ -138,7 +139,7 @@ func (l *lzExcelExport) ReadData(params []map[string]string, headRow int) (data 
 
 }
 
-func (l *lzExcelExport) export(params []map[string]string, data []map[string]interface{}) {
+func (l *LzExcelExport) export(params []map[string]string, data []map[string]interface{}) {
 	l.writeTop(params)
 	l.writeData(params, data)
 }

@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/gorilla/handlers"
+	"context"
 	"net/http"
 
 	"valuation/api/valuation/v1"
@@ -12,19 +12,25 @@ import (
 
 	"github.com/go-kratos/kratos/v2/encoding"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/middleware/selector"
 	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/go-kratos/kratos/v2/transport/http/pprof"
+	"github.com/gorilla/handlers"
 )
 
 // NewHTTPServer new a HTTP server.
-func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger) *kratosHttp.Server {
+func NewHTTPServer(c *conf.Server, good *service.GoodService, user *service.UserService, logger log.Logger) *kratosHttp.Server {
 	var opts = []kratosHttp.ServerOption{
 		kratosHttp.ResponseEncoder(encodeResponseFunc),
 		kratosHttp.ErrorEncoder(errorEncoder),
 		kratosHttp.Middleware(
 			aop.Recovery(),
+			//selector.Server(
+			//	aop.JWTAuthMiddleware(),
+			//).Match(NewWhiteListMatcher()).Build(),
 			aop.Validator(),
 		),
+
 		kratosHttp.Filter(
 			handlers.CORS(
 				handlers.AllowedOrigins([]string{"*"}),
@@ -41,40 +47,17 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, logger log.Logger)
 		opts = append(opts, kratosHttp.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := kratosHttp.NewServer(opts...)
+	srv.Handle("", pprof.NewHandler())
 	route := srv.Route("/",
 		aop.FilterRecovery,
 		handlers.CORS(
 			handlers.AllowedOrigins([]string{"*"}),
 			handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT"}),
 		))
-	route.GET("/login", func(c kratosHttp.Context) error {
-		mySigningKey := []byte("AllYourBase")
-		o := &struct {
-			signingMethod jwt.SigningMethod
-			claims        jwt.Claims
-		}{
-			signingMethod: jwt.SigningMethodHS256,
-			claims: jwt.RegisteredClaims{
-				ID: "1",
-			},
-		}
-		token := jwt.NewWithClaims(o.signingMethod, o.claims)
-		tokenString, err := token.SignedString(mySigningKey)
-		if err != nil {
-			return err
-		}
-		return c.JSON(200, map[string]interface{}{
-			"msg": "ok",
-			"data": map[string]interface{}{
-				"access_token": tokenString,
-			},
-			"code": 200,
-		})
-
-	})
 	goods := service.GoodService{}
 	route.POST("/good/upload", goods.GoodUpload)
 	valuation.RegisterGoodHTTPServer(srv, good)
+	valuation.RegisterUserHTTPServer(srv, user)
 	return srv
 }
 
@@ -113,4 +96,15 @@ func errorEncoder(w http.ResponseWriter, r *http.Request, err error) {
 	w.Header().Set("Content-Type", "application/"+codec.Name())
 	w.WriteHeader(se.Code)
 	_, _ = w.Write(body)
+}
+
+func NewWhiteListMatcher() selector.MatchFunc {
+	whiteList := make(map[string]struct{})
+	//whiteList["/api.valuation.v1.User/UserLogin"] = struct{}{}
+	return func(ctx context.Context, operation string) bool {
+		if _, ok := whiteList[operation]; ok {
+			return false
+		}
+		return true
+	}
 }
