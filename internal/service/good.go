@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"valuation/internal/data"
+	"time"
 
 	pb "valuation/api/valuation/v1"
 	"valuation/internal/biz"
+	"valuation/internal/data"
 	"valuation/pkg/convertx"
 	"valuation/pkg/errorx"
 	"valuation/pkg/excel"
+	"valuation/pkg/storage"
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport/http"
@@ -154,6 +156,16 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 		}
 		headRow = y
 		conf["id"] = strconv.Itoa(x)
+	}
+
+	for {
+		ok := storage.Redis.SetNX(context.Background(), "excel", "1", 2*time.Second)
+		if ok.Val() {
+			break
+		}
+		if ok.Err() != nil {
+			errorx.Dangerous(ok.Err())
+		}
 	}
 
 	//获取表数据

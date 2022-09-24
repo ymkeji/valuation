@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/gorilla/handlers"
+	"context"
 	"net/http"
 
 	"valuation/api/valuation/v1"
@@ -12,7 +12,10 @@ import (
 
 	"github.com/go-kratos/kratos/v2/encoding"
 	"github.com/go-kratos/kratos/v2/log"
+	"github.com/go-kratos/kratos/v2/middleware/selector"
 	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/go-kratos/kratos/v2/transport/http/pprof"
+	"github.com/gorilla/handlers"
 )
 
 // NewHTTPServer new a HTTP server.
@@ -22,8 +25,12 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, user *service.User
 		kratosHttp.ErrorEncoder(errorEncoder),
 		kratosHttp.Middleware(
 			aop.Recovery(),
+			//selector.Server(
+			//	aop.JWTAuthMiddleware(),
+			//).Match(NewWhiteListMatcher()).Build(),
 			aop.Validator(),
 		),
+
 		kratosHttp.Filter(
 			handlers.CORS(
 				handlers.AllowedOrigins([]string{"*"}),
@@ -40,6 +47,7 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, user *service.User
 		opts = append(opts, kratosHttp.Timeout(c.Http.Timeout.AsDuration()))
 	}
 	srv := kratosHttp.NewServer(opts...)
+	srv.Handle("", pprof.NewHandler())
 	route := srv.Route("/",
 		aop.FilterRecovery,
 		handlers.CORS(
@@ -88,4 +96,15 @@ func errorEncoder(w http.ResponseWriter, r *http.Request, err error) {
 	w.Header().Set("Content-Type", "application/"+codec.Name())
 	w.WriteHeader(se.Code)
 	_, _ = w.Write(body)
+}
+
+func NewWhiteListMatcher() selector.MatchFunc {
+	whiteList := make(map[string]struct{})
+	//whiteList["/api.valuation.v1.User/UserLogin"] = struct{}{}
+	return func(ctx context.Context, operation string) bool {
+		if _, ok := whiteList[operation]; ok {
+			return false
+		}
+		return true
+	}
 }

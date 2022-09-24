@@ -262,7 +262,27 @@ func (m *UserLoginRequest) validate(all bool) error {
 
 	var errors []error
 
-	// no validation rules for Id
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 16 {
+		err := UserLoginRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 16 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetPassword()); l < 1 || l > 16 {
+		err := UserLoginRequestValidationError{
+			field:  "Password",
+			reason: "value length must be between 1 and 16 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
 
 	if len(errors) > 0 {
 		return UserLoginRequestMultiError(errors)

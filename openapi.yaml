@@ -215,9 +215,10 @@ components:
         api.valuation.v1.UserLoginRequest:
             type: object
             properties:
-                id:
-                    type: integer
-                    format: uint64
+                name:
+                    type: string
+                password:
+                    type: string
 tags:
     - name: Good
     - name: User

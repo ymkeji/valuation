@@ -29,7 +29,8 @@ message UserInfo{
 }
 
 message UserLoginRequest {
-  uint64 id = 1 ;
+  string name = 1 [(validate.rules).string = {min_len: 1, max_len: 16}];
+  string password = 2 [(validate.rules).string = {min_len: 1, max_len: 16}];
 }
 message UserLoginReply {
   string access_token = 1;
