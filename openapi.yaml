@@ -215,7 +215,7 @@ components:
         api.valuation.v1.UserLoginRequest:
             type: object
             properties:
-                name:
+                username:
                     type: string
                 password:
                     type: string

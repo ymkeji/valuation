@@ -9,7 +9,7 @@ import (
 
 type User struct {
 	Id         uint64    ` json:"id,omitempty"`
-	Name       string    ` json:"name,omitempty"`
+	UserName   string    ` json:"username,omitempty"`
 	Password   string    ` json:"password,omitempty"`
 	Avatar     string    ` json:"avatar,omitempty"`
 	Expiration time.Time ` json:"expiration,omitempty"`
@@ -30,7 +30,7 @@ func NewUserUsecase(repo UserRepo, logger log.Logger) *UserUsecase {
 	return &UserUsecase{repo: repo, log: log.NewHelper(logger)}
 }
 
-func (uc *UserUsecase) FindByName(ctx context.Context, name string) (*User, error) {
-	uc.log.WithContext(ctx).Infof("name: %s", name)
-	return uc.repo.FindByName(ctx, name)
+func (uc *UserUsecase) FindByName(ctx context.Context, username string) (*User, error) {
+	uc.log.WithContext(ctx).Infof("username: %s", username)
+	return uc.repo.FindByName(ctx, username)
 }

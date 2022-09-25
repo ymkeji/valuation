@@ -28,7 +28,7 @@ func NewUserService(uc *biz.UserUsecase, logger log.Logger) *UserService {
 }
 
 func (s *UserService) UserLogin(ctx context.Context, req *pb.UserLoginRequest) (*pb.UserLoginReply, error) {
-	user, err := s.uc.FindByName(ctx, req.Name)
+	user, err := s.uc.FindByName(ctx, req.Username)
 	errorx.Dangerous(err)
 	if user == nil {
 		errorx.Bomb(201, "User not exist")
