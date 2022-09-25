@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"net/http"
+	"os"
 
 	"valuation/api/valuation/v1"
 	"valuation/internal/conf"
@@ -50,10 +51,7 @@ func NewHTTPServer(c *conf.Server, good *service.GoodService, user *service.User
 	srv.Handle("", pprof.NewHandler())
 	route := srv.Route("/",
 		aop.FilterRecovery,
-		handlers.CORS(
-			handlers.AllowedOrigins([]string{"*"}),
-			handlers.AllowedMethods([]string{"GET", "POST", "DELETE", "PUT"}),
-		))
+	)
 	goods := service.GoodService{}
 	route.POST("/good/upload", goods.GoodUpload)
 	valuation.RegisterGoodHTTPServer(srv, good)
@@ -77,6 +75,7 @@ func encodeResponseFunc(w http.ResponseWriter, r *http.Request, v interface{}) e
 	if err != nil {
 		return err
 	}
+	go record(r, v, nil)
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
@@ -93,6 +92,7 @@ func errorEncoder(w http.ResponseWriter, r *http.Request, err error) {
 		w.WriteHeader(500)
 		return
 	}
+	go record(r, nil, se)
 	w.Header().Set("Content-Type", "application/"+codec.Name())
 	w.WriteHeader(se.Code)
 	_, _ = w.Write(body)
@@ -107,4 +107,34 @@ func NewWhiteListMatcher() selector.MatchFunc {
 		}
 		return true
 	}
+}
+
+func record(r *http.Request, v interface{}, err error) {
+	logger := log.With(log.NewStdLogger(os.Stdout),
+		"ts", log.DefaultTimestamp,
+		"remoteAddr", r.RemoteAddr,
+		"method", r.Method,
+	)
+
+	path := r.URL.Path
+	raw := r.URL.RawQuery
+	code := 200
+	msg := "ok"
+	level := log.LevelInfo
+
+	if raw != "" {
+		path = path + "?" + raw
+	}
+	if se, ok := err.(*errorx.Error); err != nil && ok {
+		code = se.Code
+		msg = se.Msg
+		level = log.LevelError
+	}
+	_ = log.WithContext(r.Context(), logger).Log(level,
+		"path", path,
+		"code", code,
+		"data", v,
+		"msg", msg,
+	)
+
 }

@@ -72,9 +72,9 @@ func (m *UserInfo) validate(all bool) error {
 
 	}
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 16 {
+	if l := utf8.RuneCountInString(m.GetUsername()); l < 1 || l > 16 {
 		err := UserInfoValidationError{
-			field:  "Name",
+			field:  "Username",
 			reason: "value length must be between 1 and 16 runes, inclusive",
 		}
 		if !all {
@@ -262,9 +262,9 @@ func (m *UserLoginRequest) validate(all bool) error {
 
 	var errors []error
 
-	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 16 {
+	if l := utf8.RuneCountInString(m.GetUsername()); l < 1 || l > 16 {
 		err := UserLoginRequestValidationError{
-			field:  "Name",
+			field:  "Username",
 			reason: "value length must be between 1 and 16 runes, inclusive",
 		}
 		if !all {

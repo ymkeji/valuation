@@ -16,7 +16,9 @@ func JWTAuthMiddleware() middleware.Middleware {
 			if header, ok := transport.FromServerContext(ctx); ok {
 				jwtToken := header.RequestHeader().Get("Authorization")
 				id, err := jwt.DecodeToken(jwtToken)
-				errorx.Dangerous(err)
+				if err != nil {
+					errorx.Bomb(401, err.Error())
+				}
 				ctx = context.WithValue(ctx, "id", id)
 				return handler(ctx, req)
 			}
