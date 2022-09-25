@@ -115,7 +115,7 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 			{
 				"id":     "0",
 				"key":    "price",
-				"header": "金额",
+				"header": "单价",
 			},
 			{
 				"id":     "0",

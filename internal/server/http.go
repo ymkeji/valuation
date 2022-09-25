@@ -17,6 +17,7 @@ import (
 	kratosHttp "github.com/go-kratos/kratos/v2/transport/http"
 	"github.com/go-kratos/kratos/v2/transport/http/pprof"
 	"github.com/gorilla/handlers"
+	"github.com/tidwall/sjson"
 )
 
 // NewHTTPServer new a HTTP server.
@@ -67,17 +68,25 @@ func encodeResponseFunc(w http.ResponseWriter, r *http.Request, v interface{}) e
 	}
 	reply := &response{
 		Code: 200,
-		Data: v,
+		Data: nil,
 		Msg:  "ok",
 	}
 	codec := encoding.GetCodec("json")
-	data, err := codec.Marshal(reply)
+	data, err := codec.Marshal(v)
+	if err != nil {
+		return err
+	}
+	reqJson, err := codec.Marshal(reply)
+	if err != nil {
+		return err
+	}
+	reqJson, err = sjson.SetRawBytes(reqJson, "data", data)
 	if err != nil {
 		return err
 	}
 	go record(r, v, nil)
 	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(data)
+	_, err = w.Write(reqJson)
 	if err != nil {
 		return err
 	}
