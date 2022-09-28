@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 
 	"github.com/go-kratos/kratos/v2/log"
 	"github.com/go-kratos/kratos/v2/transport/http"
+	"github.com/spf13/cast"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -98,34 +98,35 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 	var (
 		params = []map[string]string{
 			{
-				"id":     "0",
+				"id":     "1",
 				"key":    "name",
 				"header": "货物（劳务）名称",
 			},
 			{
-				"id":     "0",
+				"id":     "2",
 				"key":    "type",
 				"header": "规格型号",
 			},
 			{
-				"id":     "0",
+				"id":     "3",
 				"key":    "unit",
 				"header": "单位",
 			},
 			{
-				"id":     "0",
+				"id":     "4",
 				"key":    "price",
 				"header": "单价",
 			},
 			{
-				"id":     "0",
+				"id":     "5",
 				"key":    "tariff",
 				"header": "税率",
 			},
 		}
-		headRow    = 0
+		headRow    = 1
 		errList    []excel.ExcelErr
 		insertData []map[string]interface{}
+		updateData []map[string]interface{}
 	)
 
 	req := ctx.Request()
@@ -151,11 +152,9 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 		}
 		x, y, err := excelize.CellNameToCoordinates(search[0])
 		errorx.Dangerous(err)
-		if headRow != 0 && y != headRow {
+		if y != headRow || conf["id"] != cast.ToString(x) {
 			errorx.Bomb(500, "tableHeader format error")
 		}
-		headRow = y
-		conf["id"] = strconv.Itoa(x)
 	}
 
 	// 串形化操作
@@ -187,14 +186,15 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 	//获取数据库已存在的nameList && 转成name map
 	existsList, err := data.ExistsNameList(nameList)
 	errorx.Dangerous(err)
-	nameMap := make(map[string]int, len(existsList))
-	for i, name := range existsList {
-		nameMap[name] = i
+	nameMap := make(map[string]float64, len(existsList))
+	for _, name := range existsList {
+		nameMap[name] = -1
 	}
 
 	//填充数据
 CONTINUE:
 	for r, row := range rows {
+
 		//检查数据
 		for _, conf := range params {
 			if row[conf["key"]] == "" {
@@ -205,6 +205,14 @@ CONTINUE:
 				continue CONTINUE
 			} else if conf["key"] == "name" {
 				if _, ok := nameMap[row["name"].(string)]; ok {
+					if row["price"] != "" {
+						price, err := data.FindPriceByName(row["name"].(string))
+						errorx.Dangerous(err)
+						if price >= 0 && price != cast.ToFloat64(row["price"]) {
+							nameMap[row["name"].(string)] = price
+							continue
+						}
+					}
 					errList = append(errList, excel.ExcelErr{
 						Row: r + headRow + 1,
 						Msg: fmt.Sprintf("%s 已存在", row["name"]),
@@ -213,13 +221,19 @@ CONTINUE:
 				}
 			}
 		}
+
+		if v, ok := nameMap[row["name"].(string)]; ok && v >= 0 {
+			updateData = append(updateData, row)
+			continue
+		}
 		//获取alias
 		row["alias"] = convertx.Chinese2Spell(row["name"].(string))
 		insertData = append(insertData, row)
+
 	}
 
-	//插入数据库
-	successNum, err := data.InsertGoodsByExcel(insertData)
+	//插入更新数据库
+	successNum, err := data.InsertAndUpdateGoodsByExcel(insertData, updateData)
 	errorx.Dangerous(err)
 
 	return ctx.JSON(200, map[string]interface{}{

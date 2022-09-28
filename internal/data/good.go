@@ -8,6 +8,7 @@ import (
 	"valuation/pkg/storage"
 
 	"github.com/go-kratos/kratos/v2/log"
+	"gorm.io/gorm"
 )
 
 type goodRepo struct {
@@ -146,21 +147,48 @@ func (g *goodRepo) ListAll(ctx context.Context) ([]*biz.Good, error) {
 	panic("implement me")
 }
 
-func InsertGoodsByExcel(data []map[string]interface{}) (RowsAffected int64, err error) {
-	if data == nil {
-		return
+func InsertAndUpdateGoodsByExcel(insertDate, updateData []map[string]interface{}) (RowsAffected int64, err error) {
+	err = storage.DB.Transaction(func(tx *gorm.DB) error {
+		if insertDate != nil {
+			insertRes := tx.Table("goods").Model(&Good{}).Create(insertDate)
+			if insertRes.Error != nil {
+				return insertRes.Error
+			}
+			RowsAffected = insertRes.RowsAffected
+		}
+
+		for _, good := range updateData {
+			updateRes := tx.Table("goods").Model(&Good{}).Where("name = ?", good["name"]).Update("price", good["price"])
+			if updateRes.Error != nil {
+				return updateRes.Error
+			}
+			RowsAffected++
+		}
+		return nil
+	})
+
+	if err != nil {
+		return 0, err
 	}
-	res := storage.DB.Table("goods").Model(&Good{}).Create(data)
-	if res.Error != nil {
-		return 0, res.Error
-	}
-	return res.RowsAffected, nil
+
+	return
 }
 
 func ExistsNameList(nameList []string) (exists []string, err error) {
 	res := storage.DB.Table("goods").Model(&Good{}).Select("name").Where(map[string]interface{}{"name": nameList}).Find(&exists)
 	if res.Error != nil {
 		return
+	}
+	return
+}
+
+func FindPriceByName(name string) (price float64, err error) {
+	res := storage.DB.Table("goods").Model(&Good{}).Select("price").Where(map[string]interface{}{"name": name}).Find(&price)
+	if res.Error != nil {
+		return
+	}
+	if res.RowsAffected == 0 {
+		return -1, nil
 	}
 	return
 }

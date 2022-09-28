@@ -22,6 +22,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/mozillazg/go-pinyin v0.19.0
+	github.com/spf13/cast v1.5.0 // indirect
 	github.com/tidwall/gjson v1.14.3 // indirect
 	github.com/tidwall/sjson v1.2.5
 	github.com/xuri/excelize/v2 v2.6.1
