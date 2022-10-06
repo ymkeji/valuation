@@ -3,18 +3,20 @@ package biz
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-kratos/kratos/v2/log"
 )
 
 type Good struct {
-	Id     uint64  ` json:"id,omitempty"`
-	Name   string  ` json:"name,omitempty"`
-	Type   string  ` json:"type,omitempty"`
-	Unit   string  ` json:"unit,omitempty"`
-	Price  float32 ` json:"price,omitempty"`
-	Tariff float32 ` json:"tariff,omitempty"`
-	Alias  string  ` json:"alias,omitempty"`
+	Id         uint64    ` json:"id,omitempty"`
+	Name       string    ` json:"name,omitempty"`
+	Type       string    ` json:"type,omitempty"`
+	Unit       string    ` json:"unit,omitempty"`
+	Price      float32   ` json:"price,omitempty"`
+	Tariff     float32   ` json:"tariff,omitempty"`
+	Alias      string    ` json:"alias,omitempty"`
+	CreateTime time.Time `json:"create_time,omitempty"`
 }
 type GoodRepo interface {
 	Save(context.Context, *Good) (*Good, error)

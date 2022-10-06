@@ -186,6 +186,8 @@ components:
                     format: float
                 alias:
                     type: string
+                createTime:
+                    type: string
         api.valuation.ListGoodsByWordsReply:
             type: object
             properties:
