@@ -142,6 +142,8 @@ func (m *GoodInfo) validate(all bool) error {
 
 	}
 
+	// no validation rules for CreateTime
+
 	if len(errors) > 0 {
 		return GoodInfoMultiError(errors)
 	}

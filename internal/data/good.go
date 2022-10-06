@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"strings"
+	"time"
 
 	"valuation/internal/biz"
 	"valuation/pkg/storage"
@@ -24,13 +25,14 @@ func NewGoodRepo(data *Data, logger log.Logger) biz.GoodRepo {
 }
 
 type Good struct {
-	Id     uint64  ` json:"id,omitempty"`
-	Name   string  ` json:"name,omitempty"`
-	Type   string  ` json:"type,omitempty"`
-	Unit   string  ` json:"unit,omitempty"`
-	Price  float32 ` json:"price,omitempty"`
-	Tariff float32 ` json:"tariff,omitempty"`
-	Alias  string  ` json:"alias,omitempty"`
+	Id         uint64    ` json:"id,omitempty"`
+	Name       string    ` json:"name,omitempty"`
+	Type       string    ` json:"type,omitempty"`
+	Unit       string    ` json:"unit,omitempty"`
+	Price      float32   ` json:"price,omitempty"`
+	Tariff     float32   ` json:"tariff,omitempty"`
+	Alias      string    ` json:"alias,omitempty"`
+	CreateTime time.Time `json:"create_time,omitempty"`
 }
 
 // GetGoodsByWords select * from goods where name like '%words%' or alias like '%words%'
@@ -70,19 +72,20 @@ func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint32, goodI
 		return 0, nil, res.Error
 	}
 	// select * from goods where id >= (select id from goods limit 20, 1) limit 20
-	if res := db.Where("id >= (?)", g.data.db.Table("goods").Select("id").Limit(1).Offset(int((pageNum-1)*pageSize))).Limit(int(pageSize)).Find(&goods); res.Error != nil {
+	if res := db.Table("`goods` force index (create_time_index)").Order("create_time desc").Limit(int(pageSize)).Offset(int((pageNum - 1) * pageSize)).Find(&goods); res.Error != nil {
 		return 0, nil, res.Error
 	}
 
 	for _, good := range goods {
 		goodList = append(goodList, &biz.Good{
-			Id:     good.Id,
-			Name:   good.Name,
-			Type:   good.Type,
-			Unit:   good.Unit,
-			Price:  good.Price,
-			Tariff: good.Tariff,
-			Alias:  good.Alias,
+			Id:         good.Id,
+			Name:       good.Name,
+			Type:       good.Type,
+			Unit:       good.Unit,
+			Price:      good.Price,
+			Tariff:     good.Tariff,
+			Alias:      good.Alias,
+			CreateTime: good.CreateTime,
 		})
 	}
 
@@ -97,13 +100,14 @@ func (g *goodRepo) Delete(ctx context.Context, good *biz.Good) (*biz.Good, error
 
 func (g *goodRepo) Save(ctx context.Context, goodInfo *biz.Good) (*biz.Good, error) {
 	good := Good{
-		Id:     goodInfo.Id,
-		Name:   goodInfo.Name,
-		Type:   goodInfo.Type,
-		Unit:   goodInfo.Unit,
-		Price:  goodInfo.Price,
-		Tariff: goodInfo.Tariff,
-		Alias:  goodInfo.Alias,
+		Id:         goodInfo.Id,
+		Name:       goodInfo.Name,
+		Type:       goodInfo.Type,
+		Unit:       goodInfo.Unit,
+		Price:      goodInfo.Price,
+		Tariff:     goodInfo.Tariff,
+		Alias:      goodInfo.Alias,
+		CreateTime: goodInfo.CreateTime,
 	}
 
 	res := g.data.db.Create(&good)
@@ -111,13 +115,14 @@ func (g *goodRepo) Save(ctx context.Context, goodInfo *biz.Good) (*biz.Good, err
 		return nil, res.Error
 	}
 	return &biz.Good{
-		Id:     good.Id,
-		Name:   good.Name,
-		Type:   good.Type,
-		Unit:   good.Unit,
-		Price:  good.Price,
-		Tariff: good.Tariff,
-		Alias:  good.Alias,
+		Id:         good.Id,
+		Name:       good.Name,
+		Type:       good.Type,
+		Unit:       good.Unit,
+		Price:      good.Price,
+		Tariff:     good.Tariff,
+		Alias:      good.Alias,
+		CreateTime: goodInfo.CreateTime,
 	}, nil
 }
 

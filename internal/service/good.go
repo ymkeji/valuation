@@ -35,12 +35,13 @@ func NewGoodService(uc *biz.GoodUsecase, logger log.Logger) *GoodService {
 
 func (s *GoodService) CreateGood(ctx context.Context, req *pb.CreateGoodsRequest) (*pb.CreateGoodsReply, error) {
 	good, err := s.uc.CreateGood(ctx, &biz.Good{
-		Name:   req.Name,
-		Type:   req.Type,
-		Unit:   req.Unit,
-		Price:  req.Price,
-		Tariff: req.Tariff,
-		Alias:  convertx.Chinese2Spell(req.Name),
+		Name:       req.Name,
+		Type:       req.Type,
+		Unit:       req.Unit,
+		Price:      req.Price,
+		Tariff:     req.Tariff,
+		Alias:      convertx.Chinese2Spell(req.Name),
+		CreateTime: time.Now(),
 	})
 	errorx.Dangerous(err)
 	return &pb.CreateGoodsReply{Id: good.Id}, nil
@@ -60,13 +61,14 @@ func (s *GoodService) ListGoods(ctx context.Context, req *pb.ListGoodsRequest) (
 	var goodsInfo []*pb.GoodInfo
 	for _, good := range goods {
 		goodsInfo = append(goodsInfo, &pb.GoodInfo{
-			Id:     good.Id,
-			Name:   good.Name,
-			Type:   good.Type,
-			Unit:   good.Unit,
-			Price:  good.Price,
-			Tariff: good.Tariff,
-			Alias:  good.Alias,
+			Id:         good.Id,
+			Name:       good.Name,
+			Type:       good.Type,
+			Unit:       good.Unit,
+			Price:      good.Price,
+			Tariff:     good.Tariff,
+			Alias:      good.Alias,
+			CreateTime: good.CreateTime.Format("2006-01-02 15:04:05"),
 		})
 	}
 	return &pb.ListGoodsReply{
