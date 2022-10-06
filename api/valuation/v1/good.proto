@@ -55,7 +55,11 @@ message GoodInfo{
 }
 
 message CreateGoodsRequest {
-  GoodInfo good = 1;
+  string name = 1 [(validate.rules).string = {min_len: 1, max_len: 20}];
+  string type = 2 [(validate.rules).string = {min_len: 1, max_len: 10}];
+  string unit = 3 [(validate.rules).string = {min_len: 1, max_len: 10}];
+  float price = 4 [(validate.rules).float = {gte:0}];
+  float tariff = 5 [(validate.rules).float = {gte:0}];
 }
 message CreateGoodsReply {
   uint64 id = 1;

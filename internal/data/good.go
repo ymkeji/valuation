@@ -106,7 +106,7 @@ func (g *goodRepo) Save(ctx context.Context, goodInfo *biz.Good) (*biz.Good, err
 		Alias:  goodInfo.Alias,
 	}
 
-	res := g.data.db.Create(good)
+	res := g.data.db.Create(&good)
 	if res.Error != nil {
 		return nil, res.Error
 	}

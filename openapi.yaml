@@ -148,8 +148,18 @@ components:
         api.valuation.CreateGoodsRequest:
             type: object
             properties:
-                good:
-                    $ref: '#/components/schemas/api.valuation.GoodInfo'
+                name:
+                    type: string
+                type:
+                    type: string
+                unit:
+                    type: string
+                price:
+                    type: number
+                    format: float
+                tariff:
+                    type: number
+                    format: float
         api.valuation.DeleteGoodsReply:
             type: object
             properties: {}
