@@ -241,33 +241,59 @@ func (m *CreateGoodsRequest) validate(all bool) error {
 
 	var errors []error
 
-	if all {
-		switch v := interface{}(m.GetGood()).(type) {
-		case interface{ ValidateAll() error }:
-			if err := v.ValidateAll(); err != nil {
-				errors = append(errors, CreateGoodsRequestValidationError{
-					field:  "Good",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
-		case interface{ Validate() error }:
-			if err := v.Validate(); err != nil {
-				errors = append(errors, CreateGoodsRequestValidationError{
-					field:  "Good",
-					reason: "embedded message failed validation",
-					cause:  err,
-				})
-			}
+	if l := utf8.RuneCountInString(m.GetName()); l < 1 || l > 20 {
+		err := CreateGoodsRequestValidationError{
+			field:  "Name",
+			reason: "value length must be between 1 and 20 runes, inclusive",
 		}
-	} else if v, ok := interface{}(m.GetGood()).(interface{ Validate() error }); ok {
-		if err := v.Validate(); err != nil {
-			return CreateGoodsRequestValidationError{
-				field:  "Good",
-				reason: "embedded message failed validation",
-				cause:  err,
-			}
+		if !all {
+			return err
 		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetType()); l < 1 || l > 10 {
+		err := CreateGoodsRequestValidationError{
+			field:  "Type",
+			reason: "value length must be between 1 and 10 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetUnit()); l < 1 || l > 10 {
+		err := CreateGoodsRequestValidationError{
+			field:  "Unit",
+			reason: "value length must be between 1 and 10 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetPrice() < 0 {
+		err := CreateGoodsRequestValidationError{
+			field:  "Price",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if m.GetTariff() < 0 {
+		err := CreateGoodsRequestValidationError{
+			field:  "Tariff",
+			reason: "value must be greater than or equal to 0",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
 	}
 
 	if len(errors) > 0 {

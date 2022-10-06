@@ -34,6 +34,8 @@ func Recovery() middleware.Middleware {
 						err = t
 					case error:
 						err = errorx.New(500, t.Error())
+					case string:
+						err = errorx.New(500, t)
 					}
 				}
 			}()

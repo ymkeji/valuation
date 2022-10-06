@@ -35,12 +35,12 @@ func NewGoodService(uc *biz.GoodUsecase, logger log.Logger) *GoodService {
 
 func (s *GoodService) CreateGood(ctx context.Context, req *pb.CreateGoodsRequest) (*pb.CreateGoodsReply, error) {
 	good, err := s.uc.CreateGood(ctx, &biz.Good{
-		Name:   req.Good.Name,
-		Type:   req.Good.Type,
-		Unit:   req.Good.Unit,
-		Price:  req.Good.Price,
-		Tariff: req.Good.Tariff,
-		Alias:  convertx.Chinese2Spell(req.Good.Name),
+		Name:   req.Name,
+		Type:   req.Type,
+		Unit:   req.Unit,
+		Price:  req.Price,
+		Tariff: req.Tariff,
+		Alias:  convertx.Chinese2Spell(req.Name),
 	})
 	errorx.Dangerous(err)
 	return &pb.CreateGoodsReply{Id: good.Id}, nil
