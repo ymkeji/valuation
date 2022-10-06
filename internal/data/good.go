@@ -55,7 +55,7 @@ func (g *goodRepo) GetGoodsByWords(ctx context.Context, words string) (goodList 
 	return
 }
 
-func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint64, goodInfo *biz.Good) (total uint64, goodList []*biz.Good, err error) {
+func (g *goodRepo) GetGoods(ctx context.Context, pageNum, pageSize uint32, goodInfo *biz.Good) (total uint64, goodList []*biz.Good, err error) {
 	var (
 		goods []Good
 		db    = g.data.db.Table("goods")

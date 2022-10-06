@@ -84,13 +84,13 @@ message GetGoodsReply {
 }
 
 message ListGoodsRequest {
-  uint64  pageNum = 1 [(validate.rules).uint64 = {gt:0}];
-  uint64  pageSize = 2  [(validate.rules).uint64 = {gt:0}];
+  uint32  pageNum = 1 [(validate.rules).uint32 = {gt:0}];
+  uint32  pageSize = 2  [(validate.rules).uint32 = {gt:0}];
 }
 message ListGoodsReply {
   repeated GoodInfo dataList = 1;
-  uint64  pageNum = 2;
-  uint64  pageSize = 3;
+  uint32  pageNum = 2;
+  uint32  pageSize = 3;
   uint64  total = 4;
 }
 message ListGoodsByWordsReply {

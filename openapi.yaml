@@ -69,12 +69,12 @@ paths:
                   in: query
                   schema:
                     type: integer
-                    format: uint64
+                    format: uint32
                 - name: pageSize
                   in: query
                   schema:
                     type: integer
-                    format: uint64
+                    format: uint32
             responses:
                 "200":
                     description: OK
@@ -202,10 +202,10 @@ components:
                         $ref: '#/components/schemas/api.valuation.GoodInfo'
                 pageNum:
                     type: integer
-                    format: uint64
+                    format: uint32
                 pageSize:
                     type: integer
-                    format: uint64
+                    format: uint32
                 total:
                     type: integer
                     format: uint64
