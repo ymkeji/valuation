@@ -21,8 +21,8 @@ type LzExcelExport struct {
 }
 
 type ExcelErr struct {
-	Row int
-	Msg string
+	Row int    `json:"row"`
+	Msg string `json:"msg"`
 }
 
 func NewMyExcel() *LzExcelExport {
