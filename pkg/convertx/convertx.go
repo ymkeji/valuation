@@ -31,9 +31,10 @@ func Chinese2Spell(words string) string {
 	for i, c := range words {
 		if unicode.Is(unicode.Han, c) {
 			b.WriteString(pinyin.SinglePinyin(c, a)[0])
-			continue
+		} else if c <= 256 {
+			b.WriteByte(words[i])
 		}
-		b.WriteByte(words[i])
+
 	}
 	return b.String()
 }

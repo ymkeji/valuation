@@ -11,7 +11,7 @@ func TestChinese2Spell(t *testing.T) {
 		args args
 		want string
 	}{
-		{"test1", args{words: "sdadadasd好人啊赛sdadas"}, "sdadadasdhaorenasaisdadas"},
+		{"test1", args{words: "sdadadasd好人啊赛☺sdadas"}, "sdadadasdhaorenasaisdadas"},
 		{"test2", args{words: "sdadadasd"}, "sdadadasd"},
 		{"test3", args{words: "好人啊赛"}, "haorenasai"},
 	}
