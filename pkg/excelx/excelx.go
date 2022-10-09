@@ -27,18 +27,18 @@ type ExcelErr struct {
 
 type Option func(excel *ExcelX)
 
-func NewExcel(opts ...Option) (excel *ExcelX) {
-	excel = &ExcelX{
+func NewExcel(opts ...Option) Excelize {
+	excelX := &ExcelX{
 		f:       createFile(),
 		Sheet:   defaultSheet,
 		HeadRow: defaultHeadRow,
 	}
 
 	for _, opt := range opts {
-		opt(excel)
+		opt(excelX)
 	}
 
-	return
+	return excelX
 }
 
 func SetFile(r io.Reader, opt ...excelize.Options) Option {
