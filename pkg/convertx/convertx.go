@@ -27,13 +27,15 @@ func String2Bytes(s string) []byte {
 // Chinese2Spell 汉字转拼音
 func Chinese2Spell(words string) string {
 	b := strings.Builder{}
+	b.Grow(64)
 	a := pinyin.NewArgs()
 	for i, c := range words {
 		if unicode.Is(unicode.Han, c) {
 			b.WriteString(pinyin.SinglePinyin(c, a)[0])
-			continue
+		} else if c >= 0 && c <= 256 {
+			b.WriteByte(words[i])
 		}
-		b.WriteByte(words[i])
+
 	}
 	return b.String()
 }

@@ -49,7 +49,7 @@ func FilterRecovery(next http.Handler) http.Handler {
 		defer func() {
 			if rerr := recover(); rerr != nil {
 				var err error
-				log.Context(r.Context()).Errorf("%v: \n%s\n", rerr, stack(3))
+				log.Context(r.Context()).Errorf("%v: \n%s\n", rerr, stack(4))
 
 				switch t := rerr.(type) {
 				case *errorx.Error:

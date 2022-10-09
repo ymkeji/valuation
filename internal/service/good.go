@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"valuation/pkg/excelx"
 
 	pb "valuation/api/valuation/v1"
 	"valuation/internal/biz"
 	"valuation/internal/data"
 	"valuation/pkg/convertx"
 	"valuation/pkg/errorx"
-	"valuation/pkg/excel"
 	"valuation/pkg/storage"
 
 	"github.com/go-kratos/kratos/v2/log"
@@ -126,7 +126,7 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 			},
 		}
 		headRow    = 1
-		errList    []excel.ExcelErr
+		errList    []excelx.ExcelErr
 		insertData []map[string]interface{}
 		updateData []map[string]interface{}
 	)
@@ -142,12 +142,11 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 	defer f.Close()
 
 	//获取excel表
-	myExcel, err := excel.ReadMyExcel(f)
-	errorx.Dangerous(err)
+	e := excelx.NewExcel(excelx.SetFile(f))
 
 	//检查表头
 	for _, conf := range params {
-		search, err := myExcel.Search(conf["header"])
+		search, err := e.Search(conf["header"])
 		errorx.Dangerous(err)
 		if search == nil {
 			errorx.Bomb(500, "tableHeader %s not found", conf["header"])
@@ -174,7 +173,7 @@ func (s *GoodService) GoodUpload(ctx http.Context) error {
 	}()
 
 	//获取表数据
-	rows, err := myExcel.ReadData(params, headRow)
+	rows, err := e.ReadDate(params)
 	errorx.Dangerous(err)
 
 	//获取nameList
@@ -200,7 +199,7 @@ CONTINUE:
 		//检查数据
 		for _, conf := range params {
 			if row[conf["key"]] == "" {
-				errList = append(errList, excel.ExcelErr{
+				errList = append(errList, excelx.ExcelErr{
 					Row: r + headRow + 1,
 					Msg: fmt.Sprintf("%s 为空", conf["header"]),
 				})
@@ -215,7 +214,7 @@ CONTINUE:
 							continue
 						}
 					}
-					errList = append(errList, excel.ExcelErr{
+					errList = append(errList, excelx.ExcelErr{
 						Row: r + headRow + 1,
 						Msg: fmt.Sprintf("%s 已存在", row["name"]),
 					})
